@@ -7,8 +7,8 @@ const authenticateToken = require('../middleware/auth');
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    const { projectId, roomType } = req.params;
-    getFolderName(projectId).then(folderName => {
+    const { projectName, roomType } = req.params;
+    getFolderName(projectName).then(folderName => {
       const uploadPath = path.join(__dirname, '..', 'json_lists', folderName, roomType);
       console.log(`Upload path: ${uploadPath}`);
       if (!fs.existsSync(uploadPath)) {
@@ -38,7 +38,7 @@ const upload = multer({
 });
 
 // 获取项目的文件夹名称
-const getFolderName = (projectId) => {
+const getFolderName = (projectName) => {
   return new Promise((resolve, reject) => {
     const directory = path.join(__dirname, '..', 'json_lists');
     console.log('Checking directory:', directory);
@@ -47,7 +47,7 @@ const getFolderName = (projectId) => {
         return reject(err);
       }
       console.log('Available project folders:', files);
-      const folderName = files.find(file => file === projectId);
+      const folderName = files.find(file => file === projectName);
       if (!folderName) {
         return reject(new Error('Project folder not found'));
       }
@@ -73,13 +73,13 @@ const getFilesInRoomType = (projectFolder, roomType) => {
 
 // 处理获取特定房型文件列表的请求
 router.get('/:roomType/files', authenticateToken, async (req, res) => {
-  const { projectId, roomType } = req.params;
+  const { projectName, roomType } = req.params;
 
-  console.log(`Project ID: ${projectId}`);
+  console.log(`Project Name: ${projectName}`);
   console.log(`Room Type: ${roomType}`);
 
   try {
-    const folderName = await getFolderName(projectId);
+    const folderName = await getFolderName(projectName);
     console.log(`Folder Name: ${folderName}`);
     const files = await getFilesInRoomType(folderName, roomType);
     res.status(200).json(files);
@@ -91,14 +91,14 @@ router.get('/:roomType/files', authenticateToken, async (req, res) => {
 
 // 处理下载特定文件的请求
 router.get('/:roomType/files/:fileName', authenticateToken, async (req, res) => {
-  const { projectId, roomType, fileName } = req.params;
+  const { projectName, roomType, fileName } = req.params;
 
-  console.log(`Project ID: ${projectId}`);
+  console.log(`Project Name: ${projectName}`);
   console.log(`Room Type: ${roomType}`);
   console.log(`File Name: ${fileName}`);
 
   try {
-    const folderName = await getFolderName(projectId);
+    const folderName = await getFolderName(projectName);
     console.log(`Folder Name: ${folderName}`);
     const filePath = path.join(__dirname, '..', 'json_lists', folderName, roomType, fileName);
     console.log(`File Path: ${filePath}`);
@@ -116,9 +116,9 @@ router.get('/:roomType/files/:fileName', authenticateToken, async (req, res) => 
 
 // 处理删除特定文件的请求
 router.delete('/:roomType/files/:fileName', authenticateToken, async (req, res) => {
-  const { projectId, roomType, fileName } = req.params;
+  const { projectName, roomType, fileName } = req.params;
   try {
-    const folderName = await getFolderName(projectId);
+    const folderName = await getFolderName(projectName);
     console.log(`Folder Name: ${folderName}`);
     const filePath = path.join(__dirname, '..', 'json_lists', folderName, roomType, fileName);
     console.log(`File Path: ${filePath}`);
@@ -148,7 +148,7 @@ router.post('/:roomType/files', authenticateToken, upload.single('file'), (req, 
 
 // 替换文件接口
 router.put('/:roomType/files/:fileName', authenticateToken, upload.single('file'), async (req, res) => {
-  const { projectId, roomType, fileName } = req.params;
+  const { projectName, roomType, fileName } = req.params;
   const { file } = req;
 
   if (!file) {
@@ -157,7 +157,7 @@ router.put('/:roomType/files/:fileName', authenticateToken, upload.single('file'
   }
 
   try {
-    const folderName = await getFolderName(projectId);
+    const folderName = await getFolderName(projectName);
     const filePath = path.join(__dirname, '..', 'json_lists', folderName, roomType, fileName);
     console.log('Replacing file at path:', filePath);
 
@@ -174,7 +174,6 @@ router.put('/:roomType/files/:fileName', authenticateToken, upload.single('file'
 
 module.exports = router;
 
-// 错误处理中间件
 router.use((err, req, res, next) => {
   if (err) {
     console.error(err.message);
