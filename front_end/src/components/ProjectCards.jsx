@@ -14,7 +14,6 @@ import Alert from '@mui/material/Alert';
 import AlertTitle from '@mui/material/AlertTitle';
 
 export default function ProjectCards({ projects, token }) {
-
   const [anchorEl, setAnchorEl] = useState(null);
   const [currentProject, setCurrentProject] = useState({});
   const [rooms, setRooms] = useState([]);
@@ -24,12 +23,10 @@ export default function ProjectCards({ projects, token }) {
   const [uploadStatus, setUploadStatus] = useState(null);
   const [openSnackbar, setOpenSnackbar] = useState(false);
 
-  // console.log('Projects:', projects); // 添加调试信息
-
   const handleOpenMenu = (event, project) => {
     setAnchorEl(event.currentTarget);
     setCurrentProject(project);
-    fetchRooms(project.id);
+    fetchRooms(project.name, project.id);  // 调用fetchRooms时传递项目名和项目id
   };
 
   const handleCloseMenu = () => {
@@ -47,9 +44,9 @@ export default function ProjectCards({ projects, token }) {
     setCurrentRoomType(null);
   };
 
-  const fetchRooms = async (projectId) => {
+  const fetchRooms = async (projectName, projectId) => {
     try {
-      const response = await axios.get(`http://174.138.109.122:8000/api/projects/${projectId}/roomTypes`, {
+      const response = await axios.get(`http://174.138.109.122:8000/api/projects/${projectName}_${projectId}/roomTypes`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -109,9 +106,9 @@ export default function ProjectCards({ projects, token }) {
     }
   };
 
-  const downloadRoomTypes = async (projectId) => {
+  const downloadRoomTypes = async (projectName, projectId) => {
     try {
-      const response = await axios.get(`http://174.138.109.122:8000/api/projects/${projectId}/roomTypes/download`, {
+      const response = await axios.get(`http://174.138.109.122:8000/api/projects/${projectName}_${projectId}/roomTypes/download`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -197,7 +194,7 @@ export default function ProjectCards({ projects, token }) {
             </Typography>
           </CardContent>
           <CardActions>
-            <Button size="small" sx={{ textTransform: 'none' }} onClick={() => downloadRoomTypes(project.id)}>
+            <Button size="small" sx={{ textTransform: 'none' }} onClick={() => downloadRoomTypes(project.name, project.id)}>
               Get Room Type List
             </Button>
             <Button size="small" sx={{ textTransform: 'none' }} onClick={(event) => handleOpenMenu(event, project)}>
