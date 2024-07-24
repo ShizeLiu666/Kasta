@@ -1,0 +1,136 @@
+{
+    "devices": [
+        {
+            "appearanceShortname": "KBSKTDIM",
+            "deviceName": "A"
+        },
+        {
+            "appearanceShortname": "KBSKTDIM",
+            "deviceName": "B"
+        },
+        {
+            "appearanceShortname": "KBSKTDIM",
+            "deviceName": "C"
+        },
+        {
+            "appearanceShortname": "KBSKTDIM",
+            "deviceName": "D"
+        },
+        {
+            "appearanceShortname": "KBSKTDIM",
+            "deviceName": "E"
+        },
+        {
+            "appearanceShortname": "KBSKTDIM",
+            "deviceName": "F"
+        },
+        {
+            "appearanceShortname": "KBSKTDIM",
+            "deviceName": "I"
+        },
+        {
+            "appearanceShortname": "KBSKTDIM",
+            "deviceName": "K"
+        },
+        {
+            "appearanceShortname": "KBSKTDIM",
+            "deviceName": "L"
+        },
+        {
+            "appearanceShortname": "KBSKTDIM",
+            "deviceName": "N"
+        },
+        {
+            "appearanceShortname": "KBSKTDIM",
+            "deviceName": "O"
+        },
+        {
+            "appearanceShortname": "KBSKTDIM",
+            "deviceName": "Q"
+        },
+        {
+            "appearanceShortname": "KBSKTDIM",
+            "deviceName": "S"
+        },
+        {
+            "appearanceShortname": "KBSKTDIM",
+            "deviceName": "V"
+        },
+        {
+            "appearanceShortname": "KBSKTREL",
+            "deviceName": "G"
+        },
+        {
+            "appearanceShortname": "KBSKTREL",
+            "deviceName": "H"
+        },
+        {
+            "appearanceShortname": "S2400IB2",
+            "deviceName": "J"
+        },
+        {
+            "appearanceShortname": "S2400IB2",
+            "deviceName": "M"
+        },
+        {
+            "appearanceShortname": "C300IBH",
+            "deviceName": "BLIND LEFT"
+        },
+        {
+            "appearanceShortname": "C300IBH",
+            "deviceName": "BLIND RIGHT"
+        },
+        {
+            "appearanceShortname": "H1RSMB",
+            "deviceName": "S05"
+        },
+        {
+            "appearanceShortname": "H1RSMB",
+            "deviceName": "S09"
+        },
+        {
+            "appearanceShortname": "H1RSMB",
+            "deviceName": "S13"
+        },
+        {
+            "appearanceShortname": "H2RSMB",
+            "deviceName": "S12"
+        },
+        {
+            "appearanceShortname": "H3RSMB",
+            "deviceName": "S10"
+        },
+        {
+            "appearanceShortname": "H3RSMB",
+            "deviceName": "S11"
+        },
+        {
+            "appearanceShortname": "H4RSMB",
+            "deviceName": "S01"
+        },
+        {
+            "appearanceShortname": "H4RSMB",
+            "deviceName": "S02"
+        },
+        {
+            "appearanceShortname": "H4RSMB",
+            "deviceName": "S07"
+        },
+        {
+            "appearanceShortname": "H6RSMB",
+            "deviceName": "S03"
+        },
+        {
+            "appearanceShortname": "H6RSMB",
+            "deviceName": "S04"
+        },
+        {
+            "appearanceShortname": "6INPUT",
+            "deviceName": "6IN"
+        },
+        {
+            "appearanceShortname": "4OUTPUT",
+            "deviceName": "4OUT"
+        }
+    ]
+}

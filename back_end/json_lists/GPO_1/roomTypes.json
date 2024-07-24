@@ -1,0 +1,37 @@
+[
+  {
+    "id": 1,
+    "typeCode": "SK",
+    "description": "Standard King Room"
+  },
+  {
+    "id": 2,
+    "typeCode": "SD",
+    "description": "Standard Double Room"
+  },
+  {
+    "id": 3,
+    "typeCode": "EKC",
+    "description": "Executive King Corner Room"
+  },
+  {
+    "id": 4,
+    "typeCode": "EK",
+    "description": "Executive King Room"
+  },
+  {
+    "id": 5,
+    "typeCode": "ES",
+    "description": "Executive Suite"
+  },
+  {
+    "id": 6,
+    "typeCode": "EDC",
+    "description": "Executive Double Corner Room"
+  },
+  {
+    "id": 7,
+    "typeCode": "ED",
+    "description": "Executive Double Room"
+  }
+]

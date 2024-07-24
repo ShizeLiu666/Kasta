@@ -1,0 +1,12 @@
+{
+    "groups": [
+        {
+            "groupName": "BLIND LEFT",
+            "devices": []
+        },
+        {
+            "groupName": "BLIND RIGHT",
+            "devices": []
+        }
+    ]
+}

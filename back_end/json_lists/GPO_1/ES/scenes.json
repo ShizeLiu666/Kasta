@@ -1,0 +1,384 @@
+{
+    "scenes": [
+        {
+            "sceneName": "BRIGHT",
+            "contents": [
+                {
+                    "name": "A,",
+                    "status": "N,",
+                    "statusConditions": {
+                        "level": 70
+                    }
+                },
+                {
+                    "name": "J,",
+                    "status": "M",
+                    "statusConditions": {
+                        "level": 0
+                    }
+                },
+                {
+                    "name": "S",
+                    "status": "ON",
+                    "statusConditions": {
+                        "level": 70
+                    }
+                }
+            ]
+        },
+        {
+            "sceneName": "OFF",
+            "contents": [
+                {
+                    "name": "TURN",
+                    "status": "OFF",
+                    "statusConditions": {
+                        "level": 0
+                    }
+                }
+            ]
+        },
+        {
+            "sceneName": "SOFT",
+            "contents": [
+                {
+                    "name": "A,",
+                    "status": "N,",
+                    "statusConditions": {
+                        "level": 10
+                    }
+                },
+                {
+                    "name": "J",
+                    "status": "ON",
+                    "statusConditions": {
+                        "level": 100
+                    }
+                },
+                {
+                    "name": "S",
+                    "status": "ON",
+                    "statusConditions": {
+                        "level": 10
+                    }
+                }
+            ]
+        },
+        {
+            "sceneName": "BATH ON",
+            "contents": [
+                {
+                    "name": "E",
+                    "status": "ON",
+                    "statusConditions": {
+                        "level": 100
+                    }
+                }
+            ]
+        },
+        {
+            "sceneName": "BATH OFF",
+            "contents": [
+                {
+                    "name": "TURN",
+                    "status": "OFF",
+                    "statusConditions": {
+                        "level": 0
+                    }
+                }
+            ]
+        },
+        {
+            "sceneName": "BATH MOOD",
+            "contents": [
+                {
+                    "name": "E",
+                    "status": "ON",
+                    "statusConditions": {
+                        "level": 30
+                    }
+                },
+                {
+                    "name": "V",
+                    "status": "ON",
+                    "statusConditions": {
+                        "level": 90
+                    }
+                }
+            ]
+        },
+        {
+            "sceneName": "BED BRIGHT",
+            "contents": [
+                {
+                    "name": "A",
+                    "status": "ON",
+                    "statusConditions": {
+                        "level": 70
+                    }
+                },
+                {
+                    "name": "M",
+                    "status": "ON",
+                    "statusConditions": {
+                        "level": 100
+                    }
+                }
+            ]
+        },
+        {
+            "sceneName": "BED OFF",
+            "contents": [
+                {
+                    "name": "TURN",
+                    "status": "OFF",
+                    "statusConditions": {
+                        "level": 0
+                    }
+                }
+            ]
+        },
+        {
+            "sceneName": "BED SOFT",
+            "contents": [
+                {
+                    "name": "A",
+                    "status": "ON",
+                    "statusConditions": {
+                        "level": 10
+                    }
+                },
+                {
+                    "name": "M",
+                    "status": "ON",
+                    "statusConditions": {
+                        "level": 100
+                    }
+                }
+            ]
+        },
+        {
+            "sceneName": "SMALL BATH ON",
+            "contents": [
+                {
+                    "name": "I",
+                    "status": "ON",
+                    "statusConditions": {
+                        "level": 100
+                    }
+                }
+            ]
+        },
+        {
+            "sceneName": "SMALL BATH OFF",
+            "contents": [
+                {
+                    "name": "TURN",
+                    "status": "OFF",
+                    "statusConditions": {
+                        "level": 0
+                    }
+                }
+            ]
+        },
+        {
+            "sceneName": "SMALL BATH MOOD",
+            "contents": [
+                {
+                    "name": "I",
+                    "status": "ON",
+                    "statusConditions": {
+                        "level": 30
+                    }
+                }
+            ]
+        },
+        {
+            "sceneName": "DINING BRIGHT",
+            "contents": [
+                {
+                    "name": "N",
+                    "status": "ON",
+                    "statusConditions": {
+                        "level": 70
+                    }
+                },
+                {
+                    "name": "L",
+                    "status": "ON",
+                    "statusConditions": {
+                        "level": 100
+                    }
+                },
+                {
+                    "name": "S",
+                    "status": "ON",
+                    "statusConditions": {
+                        "level": 70
+                    }
+                }
+            ]
+        },
+        {
+            "sceneName": "DINING OFF",
+            "contents": [
+                {
+                    "name": "TURN",
+                    "status": "OFF",
+                    "statusConditions": {
+                        "level": 0
+                    }
+                }
+            ]
+        },
+        {
+            "sceneName": "DINING SOFT",
+            "contents": [
+                {
+                    "name": "N",
+                    "status": "ON",
+                    "statusConditions": {
+                        "level": 10
+                    }
+                },
+                {
+                    "name": "L",
+                    "status": "ON",
+                    "statusConditions": {
+                        "level": 10
+                    }
+                },
+                {
+                    "name": "S",
+                    "status": "ON",
+                    "statusConditions": {
+                        "level": 10
+                    }
+                }
+            ]
+        },
+        {
+            "sceneName": "LIVING BRIGHT",
+            "contents": [
+                {
+                    "name": "Q",
+                    "status": "ON",
+                    "statusConditions": {
+                        "level": 70
+                    }
+                },
+                {
+                    "name": "J",
+                    "status": "ON",
+                    "statusConditions": {
+                        "level": 100
+                    }
+                },
+                {
+                    "name": "S",
+                    "status": "ON",
+                    "statusConditions": {
+                        "level": 70
+                    }
+                }
+            ]
+        },
+        {
+            "sceneName": "LIVING OFF",
+            "contents": [
+                {
+                    "name": "TURN",
+                    "status": "OFF",
+                    "statusConditions": {
+                        "level": 0
+                    }
+                }
+            ]
+        },
+        {
+            "sceneName": "LIVING SOFT",
+            "contents": [
+                {
+                    "name": "Q",
+                    "status": "ON",
+                    "statusConditions": {
+                        "level": 10
+                    }
+                },
+                {
+                    "name": "J",
+                    "status": "ON",
+                    "statusConditions": {
+                        "level": 100
+                    }
+                },
+                {
+                    "name": "S",
+                    "status": "ON",
+                    "statusConditions": {
+                        "level": 10
+                    }
+                }
+            ]
+        },
+        {
+            "sceneName": "WELCOME",
+            "contents": [
+                {
+                    "name": "A,",
+                    "status": "N,",
+                    "statusConditions": {
+                        "level": 70
+                    }
+                },
+                {
+                    "name": "J,",
+                    "status": "M,",
+                    "statusConditions": {
+                        "level": 0
+                    }
+                },
+                {
+                    "name": "S",
+                    "status": "ON",
+                    "statusConditions": {
+                        "level": 70
+                    }
+                }
+            ]
+        },
+        {
+            "sceneName": "OCCUPIED",
+            "contents": [
+                {
+                    "name": "A,",
+                    "status": "N,",
+                    "statusConditions": {
+                        "level": 70
+                    }
+                },
+                {
+                    "name": "J,",
+                    "status": "M,",
+                    "statusConditions": {
+                        "level": 0
+                    }
+                },
+                {
+                    "name": "S",
+                    "status": "ON",
+                    "statusConditions": {
+                        "level": 70
+                    }
+                },
+                {
+                    "name": "B,",
+                    "status": "C,",
+                    "statusConditions": {
+                        "level": 0
+                    }
+                }
+            ]
+        }
+    ]
+}
