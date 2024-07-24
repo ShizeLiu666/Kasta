@@ -12,8 +12,9 @@ const configRouter = require('./routes/config');
 app.use(express.json());
 app.use(morgan('dev'));
 app.use(helmet());
+
 app.use(cors({
-  origin: ['http://localhost:3000', 'http://localhost:3001', 'http://localhost:3002', 'http://localhost:3003'],
+  origin: ['http://174.138.109.122:3000', 'http://localhost:3000', 'http://localhost:3001', 'http://localhost:3002', 'http://localhost:3003'],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
@@ -31,4 +32,3 @@ app.listen(port, () => {
 });
 
 module.exports = app;
-//
