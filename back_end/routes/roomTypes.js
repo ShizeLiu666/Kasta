@@ -2,7 +2,7 @@ const express = require('express');
 const fs = require('fs');
 const path = require('path');
 const router = express.Router({ mergeParams: true });
-const authenticateToken = require('../middleware/auth');
+const authenticateToken = require('../middleware/auth'); // 确保这是一个中间件函数
 
 // ! API 3: Get room type list
 const getRoomTypes = (projectId) => {
