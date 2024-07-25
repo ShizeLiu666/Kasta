@@ -7,6 +7,7 @@ const projectsRouter = require('./routes/projects');
 const authRouter = require('./routes/auth');
 const roomTypesRouter = require('./routes/roomTypes');
 const configRouter = require('./routes/config');
+const excelToJsonRouter = require('./routes/excelToJson');
 
 const app = express();
 
@@ -25,6 +26,12 @@ app.use('/api/projects', projectsRouter);
 app.use('/api/auth', authRouter);
 app.use('/api/projects/:projectName/roomTypes', roomTypesRouter);
 app.use('/api/projects/:projectName/config', configRouter);
+app.use('/api/excelToJson', excelToJsonRouter);
+
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).send('Something broke!');
+});
 
 const port = process.env.PORT || 8000;
 app.listen(port, () => {
