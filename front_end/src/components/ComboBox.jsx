@@ -4,6 +4,7 @@ import TextField from '@mui/material/TextField';
 import axios from 'axios';
 import ProjectCards from './ProjectCards';
 import Box from '@mui/material/Box';
+import config from '../config';
 
 export default function ComboBox() {
   const [projects, setProjects] = useState([]);
@@ -13,7 +14,7 @@ export default function ComboBox() {
   useEffect(() => {
     const fetchProjects = async () => {
       try {
-        const response = await axios.get('http://174.138.109.122:8000/api/projects', {
+        const response = await axios.get(`${config.apiBaseUrl}/api/projects`, {
           headers: {
             Authorization: `Bearer ${token}`
           }

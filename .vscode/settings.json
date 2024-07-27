@@ -1,5 +1,6 @@
 {
     "aide.convertLanguagePairs": {
         "javascriptreact": "java"
-    }
+    },
+    "svn.ignoreMissingSvnWarning": true
 }

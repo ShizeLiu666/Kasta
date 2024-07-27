@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import Snackbar from '@mui/material/Snackbar';
 import Alert from '@mui/material/Alert';
 import AlertTitle from '@mui/material/AlertTitle';
+import config from '../config'; // 导入配置文件
 
 const LoginPage = () => {
   const [email, setEmail] = useState('');
@@ -31,7 +32,7 @@ const LoginPage = () => {
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.post('http://174.138.109.122:8000/api/auth/get_token', { username: email, password });
+      const response = await axios.post(`${config.apiBaseUrl}/api/auth/get_token`, { username: email, password });
       const { token } = response.data;
       localStorage.setItem('token', token);
       if (rememberMe) {

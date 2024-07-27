@@ -8,10 +8,5 @@
     "id": 2,
     "name": "MPH",
     "address": "166 Albert Rd, South Melbourne VIC 3205"
-  },
-  {
-    "id": 3,
-    "name": "NewProject",
-    "address": "NewAddress"
   }
 ]

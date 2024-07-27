@@ -12,6 +12,7 @@ import FileDialog from './FileDialog';
 import Snackbar from '@mui/material/Snackbar';
 import Alert from '@mui/material/Alert';
 import AlertTitle from '@mui/material/AlertTitle';
+import config from '../config';
 
 export default function ProjectCards({ projects, token }) {
   const [anchorEl, setAnchorEl] = useState(null);
@@ -46,7 +47,7 @@ export default function ProjectCards({ projects, token }) {
 
   const fetchRooms = async (projectName, projectId) => {
     try {
-      const response = await axios.get(`http://174.138.109.122:8000/api/projects/${projectName}_${projectId}/roomTypes`, {
+      const response = await axios.get(`${config.apiBaseUrl}/api/projects/${projectName}_${projectId}/roomTypes`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -60,7 +61,7 @@ export default function ProjectCards({ projects, token }) {
   const fetchFiles = async (project, roomType) => {
     try {
       setCurrentRoomType(roomType);
-      const response = await axios.get(`http://174.138.109.122:8000/api/projects/${project.name}_${project.id}/config/${roomType}/files`, {
+      const response = await axios.get(`${config.apiBaseUrl}/api/projects/${project.name}_${project.id}/config/${roomType}/files`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -75,7 +76,7 @@ export default function ProjectCards({ projects, token }) {
 
   const downloadFile = async (project, roomType, fileName) => {
     try {
-      const response = await axios.get(`http://174.138.109.122:8000/api/projects/${project.name}_${project.id}/config/${roomType}/files/${fileName}`, {
+      const response = await axios.get(`${config.apiBaseUrl}/api/projects/${project.name}_${project.id}/config/${roomType}/files/${fileName}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -95,7 +96,7 @@ export default function ProjectCards({ projects, token }) {
 
   const deleteFile = async (project, roomType, fileName) => {
     try {
-      await axios.delete(`http://174.138.109.122:8000/api/projects/${project.name}_${project.id}/config/${roomType}/files/${fileName}`, {
+      await axios.delete(`${config.apiBaseUrl}/api/projects/${project.name}_${project.id}/config/${roomType}/files/${fileName}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -108,7 +109,7 @@ export default function ProjectCards({ projects, token }) {
 
   const downloadRoomTypes = async (projectName, projectId) => {
     try {
-      const response = await axios.get(`http://174.138.109.122:8000/api/projects/${projectName}_${projectId}/roomTypes/download`, {
+      const response = await axios.get(`${config.apiBaseUrl}/api/projects/${projectName}_${projectId}/roomTypes/download`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },

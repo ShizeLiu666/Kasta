@@ -12,6 +12,7 @@ import Button from '@mui/material/Button';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import ClearIcon from '@mui/icons-material/Clear';
 import DownloadIcon from '@mui/icons-material/Download';
+import config from '../config';
 
 const FileDialog = ({
   open,
@@ -82,7 +83,7 @@ const FileDialog = ({
     try {
       console.log('Preparing to send POST request');
       const response = await axios.post(
-        `http://174.138.109.122:8000/api/projects/${currentProject.name}_${currentProject.id}/config/${currentRoomType}/files`,
+        `${config.apiBaseUrl}/api/projects/${currentProject.name}_${currentProject.id}/config/${currentRoomType}/files`,
         formData,
         {
           headers: {
@@ -132,7 +133,7 @@ const FileDialog = ({
     
     try {
       const replaceResponse = await axios.put(
-        `http://174.138.109.122:8000/api/projects/${currentProject.name}_${currentProject.id}/config/${currentRoomType}/files/${selectedFile.name}`,
+        `${config.apiBaseUrl}/api/projects/${currentProject.name}_${currentProject.id}/config/${currentRoomType}/files/${selectedFile.name}`,
         formData,
         {
           headers: {
