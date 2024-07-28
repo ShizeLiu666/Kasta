@@ -33,5 +33,9 @@
     "id": 7,
     "typeCode": "ED",
     "description": "Executive Double Room"
+  },
+  {
+    "typeCode": "NEW_ROOM_TYPE",
+    "description": "New Room Type Description"
   }
 ]

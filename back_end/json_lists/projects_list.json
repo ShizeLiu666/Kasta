@@ -1,12 +1,12 @@
 [
   {
-    "id": 1,
     "name": "GPO",
-    "address": "2/10 Franklin St, Adelaide SA 5000"
+    "address": "2/10 Franklin St, Adelaide SA 5000",
+    "id": "e351c0b0-2469-403d-9b73-d177676f0af6"
   },
   {
-    "id": 2,
     "name": "MPH",
-    "address": "166 Albert Rd, South Melbourne VIC 3205"
+    "address": "166 Albert Rd, South Melbourne VIC 3205",
+    "id": "b80191fe-278e-4078-8c53-4c848fc29206"
   }
 ]

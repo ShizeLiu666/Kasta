@@ -1,6 +1,7 @@
 const express = require('express');
 const fs = require('fs');
 const path = require('path');
+const { v4: uuidv4 } = require('uuid'); // 引入uuid库
 const router = express.Router();
 
 // ! API 1 - get projects
@@ -25,8 +26,8 @@ const getProjects = () => {
   });
 };
 
-// ! API 2 - delete project by name
-const deleteProject = (name) => {
+// ! API 2 - delete project by id
+const deleteProjectById = (id) => {
   return new Promise((resolve, reject) => {
     const filePath = path.join(__dirname, '..', 'json_lists', 'projects_list.json');
     fs.readFile(filePath, (err, data) => {
@@ -34,7 +35,7 @@ const deleteProject = (name) => {
         return reject(err);
       }
       let projects = JSON.parse(data);
-      projects = projects.filter(project => project.name !== name);
+      projects = projects.filter(project => project.id !== id);
       fs.writeFile(filePath, JSON.stringify(projects, null, 2), (err) => {
         if (err) {
           return reject(err);
@@ -54,12 +55,13 @@ const addProject = (newProject) => {
         return reject(err);
       }
       const projects = JSON.parse(data);
-      projects.push(newProject);
+      const projectWithId = { ...newProject, id: uuidv4() }; // 生成唯一ID并添加到项目
+      projects.push(projectWithId);
       fs.writeFile(filePath, JSON.stringify(projects, null, 2), (err) => {
         if (err) {
           return reject(err);
         }
-        resolve(projects);
+        resolve(projectWithId); // 返回包含新ID的项目
       });
     });
   });
@@ -76,14 +78,14 @@ router.get('/', async (req, res) => {
   }
 });
 
-// handle DELETE requests to delete a project by name
-router.delete('/:name', async (req, res) => {
+// handle POST requests to delete a project by id
+router.post('/delete', async (req, res) => {
   try {
-    const projectName = req.params.name;
-    const projects = await deleteProject(projectName);
+    const projectId = req.body.id;
+    const projects = await deleteProjectById(projectId);
     res.status(200).json(projects);
   } catch (error) {
-    console.error("Error in DELETE /api/projects/:name:", error);
+    console.error("Error in POST /api/projects/delete:", error);
     res.status(500).send("Error deleting the project.");
   }
 });
@@ -92,8 +94,8 @@ router.delete('/:name', async (req, res) => {
 router.post('/', async (req, res) => {
   try {
     const newProject = req.body;
-    const projects = await addProject(newProject);
-    res.status(201).json(projects);
+    const projectWithId = await addProject(newProject); // 返回包含新ID的项目
+    res.status(201).json(projectWithId);
   } catch (error) {
     console.error("Error in POST /api/projects:", error);
     res.status(500).send("Error adding the project.");
