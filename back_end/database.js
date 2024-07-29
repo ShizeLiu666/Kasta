@@ -29,6 +29,25 @@ const projectSchema = new mongoose.Schema({
 
 const Project = mongoose.model('projects', projectSchema);
 
+// RoomType Schema and Model
+const roomTypeSchema = new mongoose.Schema({
+  projectId: { type: mongoose.Schema.Types.ObjectId, ref: 'projects', required: true },
+  typeCode: { type: String, required: true },
+  name: { type: String, required: true }
+});
+
+const RoomType = mongoose.model('roomTypes', roomTypeSchema);
+
+// RoomConfig Schema and Model
+const roomConfigSchema = new mongoose.Schema({
+  projectId: { type: mongoose.Schema.Types.ObjectId, ref: 'projects', required: true },
+  roomTypeId: { type: mongoose.Schema.Types.ObjectId, ref: 'roomTypes', required: true },
+  typeCode: { type: String, required: true }, // Add typeCode field
+  config: { type: mongoose.Schema.Types.Mixed, required: true }
+});
+
+const RoomConfig = mongoose.model('roomConfigs', roomConfigSchema);
+
 // Initialize Users
 const initUsers = async () => {
   const users = [
@@ -45,4 +64,4 @@ const initUsers = async () => {
 
 initUsers();
 
-module.exports = { User, Project };
+module.exports = { User, Project, RoomType, RoomConfig };

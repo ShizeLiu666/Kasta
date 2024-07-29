@@ -1,29 +1,12 @@
 const express = require('express');
-const fs = require('fs');
-const path = require('path');
-const multer = require('multer');
+const { RoomConfig, RoomType } = require('../database'); // Import the RoomConfig and RoomType model
 const router = express.Router({ mergeParams: true });
 const authenticateToken = require('../middleware/auth');
+const multer = require('multer');
+const path = require('path');
 
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    const { projectName, roomType } = req.params;
-    getFolderName(projectName).then(folderName => {
-      const uploadPath = path.join(__dirname, '..', 'json_lists', folderName, roomType);
-      console.log(`Upload path: ${uploadPath}`);
-      if (!fs.existsSync(uploadPath)) {
-        fs.mkdirSync(uploadPath, { recursive: true });
-        console.log(`Created upload path: ${uploadPath}`);
-      }
-      cb(null, uploadPath);
-    }).catch(err => {
-      cb(err, null);
-    });
-  },
-  filename: (req, file, cb) => {
-    cb(null, file.originalname);
-  }
-});
+// 使用内存存储读取文件内容
+const storage = multer.memoryStorage();
 
 const upload = multer({
   storage: storage,
@@ -37,152 +20,115 @@ const upload = multer({
   }
 });
 
-// 获取项目的文件夹名称
-const getFolderName = (projectName) => {
-  return new Promise((resolve, reject) => {
-    const directory = path.join(__dirname, '..', 'json_lists');
-    console.log('Checking directory:', directory);
-    fs.readdir(directory, (err, files) => {
-      if (err) {
-        return reject(err);
-      }
-      console.log('Available project folders:', files);
-      const folderName = files.find(file => file === projectName);
-      if (!folderName) {
-        return reject(new Error('Project folder not found'));
-      }
-      resolve(folderName);
-    });
-  });
+// 获取 typeCode
+const getTypeCode = async (roomTypeId) => {
+  const roomType = await RoomType.findById(roomTypeId);
+  return roomType ? roomType.typeCode : null;
 };
 
-// 获取特定房型的文件列表
-const getFilesInRoomType = (projectFolder, roomType) => {
-  return new Promise((resolve, reject) => {
-    const directoryPath = path.join(__dirname, '..', 'json_lists', projectFolder, roomType);
-    console.log('Checking room type directory:', directoryPath);
-    fs.readdir(directoryPath, (err, files) => {
-      if (err) {
-        return reject(err);
-      }
-      console.log('Files in room type:', files);
-      resolve(files);
-    });
-  });
-};
-
-// 处理获取特定房型文件列表的请求
-router.get('/:roomType/files', authenticateToken, async (req, res) => {
-  const { projectName, roomType } = req.params;
-
-  console.log(`Project Name: ${projectName}`);
-  console.log(`Room Type: ${roomType}`);
+// handle GET requests for room type files
+router.get('/files', authenticateToken, async (req, res) => {
+  const { projectId, roomTypeId } = req.params;
 
   try {
-    const folderName = await getFolderName(projectName);
-    console.log(`Folder Name: ${folderName}`);
-    const files = await getFilesInRoomType(folderName, roomType);
-    res.status(200).json(files);
+    const roomConfigs = await RoomConfig.find({ projectId, roomTypeId });
+    res.status(200).json(roomConfigs);
   } catch (error) {
-    console.error('Error fetching files:', error.message);
-    res.status(500).send('Error fetching files');
+    console.error("Error in GET /api/config/:projectId/:roomTypeId/files:", error);
+    res.status(500).send("Error fetching files");
   }
 });
 
-// 处理下载特定文件的请求
-router.get('/:roomType/files/:fileName', authenticateToken, async (req, res) => {
-  const { projectName, roomType, fileName } = req.params;
-
-  console.log(`Project Name: ${projectName}`);
-  console.log(`Room Type: ${roomType}`);
-  console.log(`File Name: ${fileName}`);
+// handle GET requests to download a room type file
+router.get('/files/:fileName', authenticateToken, async (req, res) => {
+  const { projectId, roomTypeId, fileName } = req.params;
 
   try {
-    const folderName = await getFolderName(projectName);
-    console.log(`Folder Name: ${folderName}`);
-    const filePath = path.join(__dirname, '..', 'json_lists', folderName, roomType, fileName);
-    console.log(`File Path: ${filePath}`);
-    if (fs.existsSync(filePath)) {
-      res.download(filePath);
-    } else {
-      console.log('File not found:', filePath);
-      res.status(404).send('File not found');
+    const roomConfig = await RoomConfig.findOne({ projectId, roomTypeId, fileName });
+    if (!roomConfig) {
+      return res.status(404).send("File not found");
     }
+    res.status(200).json(roomConfig.config);
   } catch (error) {
-    console.error('Error downloading file:', error.message);
-    res.status(500).send('Error downloading file');
+    console.error("Error in GET /api/config/:projectId/:roomTypeId/files/:fileName:", error);
+    res.status(500).send("Error fetching file");
   }
 });
 
-// 处理删除特定文件的请求
-router.delete('/:roomType/files/:fileName', authenticateToken, async (req, res) => {
-  const { projectName, roomType, fileName } = req.params;
-  try {
-    const folderName = await getFolderName(projectName);
-    console.log(`Folder Name: ${folderName}`);
-    const filePath = path.join(__dirname, '..', 'json_lists', folderName, roomType, fileName);
-    console.log(`File Path: ${filePath}`);
-    if (fs.existsSync(filePath)) {
-      fs.unlink(filePath, (err) => {
-        if (err) {
-          console.error('Error deleting file:', err.message);
-          return res.status(500).send('Error deleting file');
-        }
-        res.status(200).send('File deleted successfully');
-      });
-    } else {
-      console.log('File not found:', filePath);
-      res.status(404).send('File not found');
-    }
-  } catch (error) {
-    console.error('Error deleting file:', error.message);
-    res.status(500).send('Error deleting file');
-  }
-});
-
-// 文件上传接口
-router.post('/:roomType/files', authenticateToken, upload.single('file'), (req, res) => {
-  console.log('uploading file');
-  res.status(201).send('File uploaded successfully');
-});
-
-// 替换文件接口
-router.put('/:roomType/files/:fileName', authenticateToken, upload.single('file'), async (req, res) => {
-  const { projectName, roomType, fileName } = req.params;
+// handle POST requests to upload a new file for a room type
+router.post('/files', authenticateToken, upload.single('file'), async (req, res) => {
+  const { projectId, roomTypeId } = req.params;
   const { file } = req;
 
   if (!file) {
-    console.log('No file uploaded for replacement');
-    return res.status(400).send('No file uploaded');
+    return res.status(400).send("No file uploaded");
   }
 
   try {
-    const folderName = await getFolderName(projectName);
-    const filePath = path.join(__dirname, '..', 'json_lists', folderName, roomType, fileName);
-    console.log('Replacing file at path:', filePath);
+    const existingConfig = await RoomConfig.findOne({ projectId, roomTypeId });
+    if (existingConfig) {
+      return res.status(409).send("Configuration for this room type already exists");
+    }
 
-    // Log the original file details
-    console.log('Uploaded file details:', file);
+    const content = JSON.parse(file.buffer.toString('utf-8'));
+    const typeCode = await getTypeCode(roomTypeId);
 
-    console.log('File replaced successfully:', filePath);
-    return res.status(200).send('File replaced successfully');
+    const newRoomConfig = new RoomConfig({
+      projectId,
+      roomTypeId,
+      typeCode,
+      config: content
+    });
+
+    await newRoomConfig.save();
+    res.status(201).send("File uploaded successfully");
   } catch (error) {
-    console.error('Error handling file replacement:', error.message);
-    return res.status(500).send('Error handling file replacement');
+    console.error("Error uploading file:", error.message);
+    res.status(500).send("Error uploading file");
   }
 });
 
-module.exports = router;
+// handle PUT requests to replace a file for a room type
+router.put('/files', authenticateToken, upload.single('file'), async (req, res) => {
+  const { projectId, roomTypeId } = req.params;
+  const { file } = req;
 
-router.use((err, req, res, next) => {
-  if (err) {
-    console.error(err.message);
-    if (!err.status) {
-      err.status = 500;
+  if (!file) {
+    return res.status(400).send("No file uploaded");
+  }
+
+  try {
+    const content = JSON.parse(file.buffer.toString('utf-8'));
+    const typeCode = await getTypeCode(roomTypeId);
+
+    const roomConfig = await RoomConfig.findOneAndUpdate(
+      { projectId, roomTypeId },
+      { config: content, typeCode },
+      { new: true, upsert: true }
+    );
+
+    res.status(200).send("File replaced successfully");
+  } catch (error) {
+    console.error("Error replacing file:", error.message);
+    res.status(500).send("Error replacing file");
+  }
+});
+
+// handle POST requests to delete a file for a room type
+router.post('/files/delete', authenticateToken, async (req, res) => {
+  const { projectId, roomTypeId } = req.params;
+
+  try {
+    const roomConfig = await RoomConfig.findOneAndDelete({ projectId, roomTypeId });
+
+    if (!roomConfig) {
+      return res.status(404).send("Configuration not found");
     }
-    res.status(err.status).send({ error: err.message });
-  } else {
-    next();
+
+    res.status(200).send("Configuration deleted successfully");
+  } catch (error) {
+    console.error("Error deleting configuration:", error.message);
+    res.status(500).send("Error deleting configuration");
   }
 });
 

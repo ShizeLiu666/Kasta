@@ -1,68 +1,26 @@
 const express = require('express');
-const fs = require('fs');
-const path = require('path');
+const { RoomType } = require('../database'); // Import the models
 const router = express.Router({ mergeParams: true });
 const authenticateToken = require('../middleware/auth');
 
-// ! API 3: Get room type list
-const getRoomTypes = (projectName) => {
-  return new Promise((resolve, reject) => {
-    const directory = path.join(__dirname, '..', 'json_lists');
-    console.log(`Reading directory: ${directory}`);
-    fs.readdir(directory, (err, files) => {
-      if (err) {
-        console.error(`Error reading directory: ${err.message}`);
-        return reject(err);
-      }
-
-      const folderName = files.find(file => file === projectName);
-      if (!folderName) {
-        console.error('Project folder not found');
-        return reject(new Error('Project folder not found'));
-      }
-
-      const filePath = path.join(directory, folderName, 'roomTypes.json');
-      console.log(`Reading file from: ${filePath}`);
-      fs.readFile(filePath, (err, data) => {
-        if (err) {
-          console.error(`Error reading file: ${err.message}`);
-          return reject(err);
-        }
-        try {
-          const roomTypes = JSON.parse(data);
-          resolve(roomTypes);
-        } catch (parseError) {
-          console.error(`Error parsing JSON data: ${parseError.message}`);
-          reject(parseError);
-        }
-      });
-    });
-  });
-};
-
-const writeRoomTypes = (projectName, roomTypes) => {
-  return new Promise((resolve, reject) => {
-    const directory = path.join(__dirname, '..', 'json_lists');
-    const filePath = path.join(directory, projectName, 'roomTypes.json');
-    fs.writeFile(filePath, JSON.stringify(roomTypes, null, 2), (err) => {
-      if (err) {
-        console.error(`Error writing file: ${err.message}`);
-        return reject(err);
-      }
-      resolve();
-    });
-  });
+// 生成 typeCode 的函数
+const generateTypeCode = (name) => {
+  return name
+    .split(' ')
+    .filter(word => word.toLowerCase() !== 'room')
+    .map(word => word[0].toUpperCase())
+    .join('');
 };
 
 // handle GET requests for the room type list
 router.get('/', authenticateToken, async (req, res) => {
   try {
-    const projectName = req.params.projectName;
-    console.log(`GET /api/projects/${projectName}/roomTypes`);
-    const roomTypes = await getRoomTypes(projectName);
+    const projectId = req.params.projectId;
+    console.log(`GET /api/projects/${projectId}/roomTypes`);
+    const roomTypes = await RoomType.find({ projectId });
     res.status(200).json(roomTypes);
   } catch (error) {
-    console.error("Error in GET /api/projects/:projectName/roomTypes:", error);
+    console.error("Error in GET /api/projects/:projectId/roomTypes:", error);
     res.status(500).send("Error reading the room types data.");
   }
 });
@@ -70,60 +28,59 @@ router.get('/', authenticateToken, async (req, res) => {
 // handle GET requests to download room types data
 router.get('/download', authenticateToken, async (req, res) => {
   try {
-    const projectName = req.params.projectName;
-    console.log(`GET /api/projects/${projectName}/roomTypes/download`);
-    const directory = path.join(__dirname, '..', 'json_lists');
-    fs.readdir(directory, (err, files) => {
-      if (err) {
-        console.error(`Error reading directory: ${err.message}`);
-        return res.status(500).send("Error reading the directory.");
-      }
-
-      const folderName = files.find(file => file === projectName);
-      if (!folderName) {
-        console.error('Project folder not found');
-        return res.status(404).send("Project folder not found.");
-      }
-
-      const filePath = path.join(directory, folderName, 'roomTypes.json');
-      console.log(`Downloading file from: ${filePath}`);
-      res.download(filePath, 'roomTypes.json');
-    });
+    const projectId = req.params.projectId;
+    console.log(`GET /api/projects/${projectId}/roomTypes/download`);
+    const roomTypes = await RoomType.find({ projectId });
+    res.setHeader('Content-Disposition', 'attachment; filename=roomTypes.json');
+    res.status(200).json(roomTypes);
   } catch (error) {
-    console.error("Error in GET /api/projects/:projectName/roomTypes/download:", error);
+    console.error("Error in GET /api/projects/:projectId/roomTypes/download:", error);
     res.status(500).send("Error processing your request.");
   }
 });
 
-// handle POST requests to add a new room type
+// handle POST requests to add new room types
 router.post('/', authenticateToken, async (req, res) => {
   try {
-    const projectName = req.params.projectName;
-    const newRoomType = req.body;
-    console.log(`POST /api/projects/${projectName}/roomTypes`);
-    const roomTypes = await getRoomTypes(projectName);
-    roomTypes.push(newRoomType);
-    await writeRoomTypes(projectName, roomTypes);
-    res.status(200).send("Room type added successfully.");
+    const projectId = req.params.projectId;
+    const newRoomTypes = req.body;
+    console.log(`POST /api/projects/${projectId}/roomTypes`);
+
+    // 处理每个房型，生成 typeCode 并添加 projectId
+    const roomTypesToInsert = newRoomTypes.map(roomType => {
+      const typeCode = generateTypeCode(roomType.name);
+      return { ...roomType, projectId, typeCode };
+    });
+
+    // 插入房型到数据库
+    await RoomType.insertMany(roomTypesToInsert);
+    res.status(200).send("Room types added successfully.");
   } catch (error) {
-    console.error("Error in POST /api/projects/:projectName/roomTypes:", error);
-    res.status(500).send("Error adding the room type.");
+    console.error("Error in POST /api/projects/:projectId/roomTypes:", error);
+    res.status(500).send("Error adding the room types.");
   }
 });
 
-// handle DELETE requests to delete a room type by typeCode
-router.delete('/delete/:typeCode', authenticateToken, async (req, res) => {
+// handle POST requests to delete multiple room types by room type IDs
+router.post('/delete', authenticateToken, async (req, res) => {
   try {
-    const projectName = req.params.projectName;
-    const typeCode = req.params.typeCode;
-    console.log(`DELETE /api/projects/${projectName}/roomTypes/delete/${typeCode}`);
-    let roomTypes = await getRoomTypes(projectName);
-    roomTypes = roomTypes.filter(roomType => roomType.typeCode !== typeCode);
-    await writeRoomTypes(projectName, roomTypes);
-    res.status(200).send("Room type deleted successfully.");
+    const { roomTypeIds } = req.body;
+    console.log(`POST /api/projects/:projectId/roomTypes/delete`);
+
+    const deleteResults = await Promise.all(roomTypeIds.map(async (roomTypeId) => {
+      const roomType = await RoomType.findById(roomTypeId);
+
+      if (!roomType) {
+        return { roomTypeId, status: 'not found' };
+      }
+
+      await RoomType.findByIdAndDelete(roomTypeId);
+      return { roomTypeId, status: 'deleted' };
+    }));
+    res.status(200).json({ message: 'Room types processed', results: deleteResults });
   } catch (error) {
-    console.error("Error in DELETE /api/projects/:projectName/roomTypes/delete/:typeCode:", error);
-    res.status(500).send("Error deleting the room type.");
+    console.error("Error in POST /api/projects/:projectId/roomTypes/delete:", error);
+    res.status(500).send("Error deleting the room types.");
   }
 });
 
