@@ -1,7 +1,7 @@
 const express = require('express');
 const jwt = require('jsonwebtoken');
 const router = express.Router();
-const User = require('../database'); 
+const { User } = require('../database');
 
 router.post('/get_token', async (req, res) => {
   const { username, password } = req.body;
@@ -15,6 +15,7 @@ router.post('/get_token', async (req, res) => {
       return res.status(401).json({ error: 'Invalid username or password' });
     }
   } catch (error) {
+    console.error('Error in POST /api/auth/get_token:', error);
     return res.status(500).json({ error: 'Database error' });
   }
 });

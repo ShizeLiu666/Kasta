@@ -12,13 +12,24 @@ db.once('open', function() {
   console.log('Connected to MongoDB');
 });
 
+// User Schema and Model
 const userSchema = new mongoose.Schema({
   username: String,
   password: String
 });
 
-const User = mongoose.model('User', userSchema);
+const User = mongoose.model('users', userSchema);
 
+// Project Schema and Model
+const projectSchema = new mongoose.Schema({
+  name: { type: String, required: true },
+  address: { type: String, required: true },
+  password: { type: String, required: true }
+});
+
+const Project = mongoose.model('projects', projectSchema);
+
+// Initialize Users
 const initUsers = async () => {
   const users = [
     { username: 'jackliu@haneco.com.au', password: 'kasta' }
@@ -34,4 +45,4 @@ const initUsers = async () => {
 
 initUsers();
 
-module.exports = User;
+module.exports = { User, Project };
