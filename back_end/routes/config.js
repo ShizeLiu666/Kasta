@@ -1,5 +1,5 @@
 const express = require('express');
-const { RoomConfig, RoomType } = require('../database'); // Import the RoomConfig and RoomType model
+const { RoomConfig, RoomType, Project } = require('../database'); // Import the RoomConfig, RoomType, and Project model
 const router = express.Router({ mergeParams: true });
 const authenticateToken = require('../middleware/auth');
 const multer = require('multer');
@@ -81,7 +81,11 @@ router.post('/files', authenticateToken, upload.single('file'), async (req, res)
     });
 
     await newRoomConfig.save();
-    res.status(201).send("File uploaded successfully");
+    
+    res.status(201).json({
+      result: "File uploaded successfully",
+      config: content
+    });
   } catch (error) {
     console.error("Error uploading file:", error.message);
     res.status(500).send("Error uploading file");
@@ -98,24 +102,39 @@ router.put('/files', authenticateToken, upload.single('file'), async (req, res) 
   }
 
   try {
+    // 确保 projectId 和 roomTypeId 存在
+    const projectExists = await Project.exists({ _id: projectId });
+    const roomTypeExists = await RoomType.exists({ _id: roomTypeId });
+
+    if (!projectExists || !roomTypeExists) {
+      return res.status(404).send("Project or Room Type not found");
+    }
+
     const content = JSON.parse(file.buffer.toString('utf-8'));
     const typeCode = await getTypeCode(roomTypeId);
 
     const roomConfig = await RoomConfig.findOneAndUpdate(
       { projectId, roomTypeId },
       { config: content, typeCode },
-      { new: true, upsert: true }
+      { new: true }
     );
 
-    res.status(200).send("File replaced successfully");
+    if (!roomConfig) {
+      return res.status(404).send("Configuration not found for replacement");
+    }
+
+    res.status(200).json({
+      result: "File replaced successfully",
+      config: content
+    });
   } catch (error) {
     console.error("Error replacing file:", error.message);
     res.status(500).send("Error replacing file");
   }
 });
 
-// handle POST requests to delete a file for a room type
-router.post('/files/delete', authenticateToken, async (req, res) => {
+// handle DELETE requests to delete a file for a room type
+router.delete('/files', authenticateToken, async (req, res) => {
   const { projectId, roomTypeId } = req.params;
 
   try {
