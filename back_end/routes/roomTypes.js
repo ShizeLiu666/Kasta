@@ -43,18 +43,37 @@ router.get('/download', authenticateToken, async (req, res) => {
 router.post('/', authenticateToken, async (req, res) => {
   try {
     const projectId = req.params.projectId;
-    const newRoomTypes = req.body;
+    const { roomTypes } = req.body;
     console.log(`POST /api/projects/${projectId}/roomTypes`);
 
+    const existingRoomTypes = await RoomType.find({ projectId });
+    const existingRoomTypeNames = existingRoomTypes.map(rt => rt.name);
+
     // 处理每个房型，生成 typeCode 并添加 projectId
-    const roomTypesToInsert = newRoomTypes.map(roomType => {
+    const roomTypesToInsert = roomTypes.map(roomType => {
       const typeCode = generateTypeCode(roomType.name);
       return { ...roomType, projectId, typeCode };
     });
 
-    // 插入房型到数据库
-    await RoomType.insertMany(roomTypesToInsert);
-    res.status(200).send("Room types added successfully.");
+    // 检查是否有重复房型，并分离出非重复房型
+    const duplicateRoomTypes = roomTypesToInsert.filter(roomType => 
+      existingRoomTypeNames.includes(roomType.name)
+    );
+
+    const nonDuplicateRoomTypes = roomTypesToInsert.filter(roomType => 
+      !existingRoomTypeNames.includes(roomType.name)
+    );
+
+    // 插入非重复房型到数据库
+    if (nonDuplicateRoomTypes.length > 0) {
+      await RoomType.insertMany(nonDuplicateRoomTypes);
+    }
+
+    res.status(200).json({
+      message: nonDuplicateRoomTypes.length > 0 ? "Room types added successfully." : "No new room types to add.",
+      duplicateRoomTypes: duplicateRoomTypes.map(rt => rt.name),
+      addedRoomTypes: nonDuplicateRoomTypes.map(rt => rt.name)
+    });
   } catch (error) {
     console.error("Error in POST /api/projects/:projectId/roomTypes:", error);
     res.status(500).send("Error adding the room types.");
@@ -77,10 +96,44 @@ router.post('/delete', authenticateToken, async (req, res) => {
       await RoomType.findByIdAndDelete(roomTypeId);
       return { roomTypeId, status: 'deleted' };
     }));
-    res.status(200).json({ message: 'Room types processed', results: deleteResults });
+
+    const notFoundRoomTypes = deleteResults.filter(result => result.status === 'not found').map(result => result.roomTypeId);
+    const deletedRoomTypes = deleteResults.filter(result => result.status === 'deleted').map(result => result.roomTypeId);
+
+    res.status(200).json({
+      message: deletedRoomTypes.length > 0 ? "Room types processed" : "No room types deleted.",
+      notFoundRoomTypes,
+      deletedRoomTypes
+    });
   } catch (error) {
     console.error("Error in POST /api/projects/:projectId/roomTypes/delete:", error);
     res.status(500).send("Error deleting the room types.");
+  }
+});
+
+// handle PUT requests to update a room type by room type ID
+router.put('/:roomTypeId', authenticateToken, async (req, res) => {
+  try {
+    const { roomTypeId } = req.params;
+    const { name } = req.body;
+    console.log(`PUT /api/projects/${projectId}/roomTypes/${roomTypeId}`);
+
+    const typeCode = generateTypeCode(name);
+
+    const updatedRoomType = await RoomType.findByIdAndUpdate(
+      roomTypeId,
+      { name, typeCode },
+      { new: true }
+    );
+
+    if (!updatedRoomType) {
+      return res.status(404).send("Room type not found.");
+    }
+
+    res.status(200).json(updatedRoomType);
+  } catch (error) {
+    console.error("Error in PUT /api/projects/:projectId/roomTypes/:roomTypeId:", error);
+    res.status(500).send("Error updating the room type.");
   }
 });
 
