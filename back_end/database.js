@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 
-// Main database connection
+// 连接到主数据库
 const mainDB = mongoose.createConnection('mongodb://174.138.109.122:27017/kasta', {
   useNewUrlParser: true,
   useUnifiedTopology: true
@@ -11,23 +11,11 @@ mainDB.once('open', function() {
   console.log('Connected to main MongoDB');
 });
 
-// Another database connection (e.g., local development)
-const localDB = mongoose.createConnection('mongodb://localhost:27017/kasta', {
-  useNewUrlParser: true,
-  useUnifiedTopology: true
-});
-
-localDB.on('error', console.error.bind(console, 'connection error:'));
-localDB.once('open', function() {
-  console.log('Connected to local MongoDB');
-});
-
-// Define schemas and models for the main database
+// 定义模型
 const userSchema = new mongoose.Schema({
   username: String,
   password: String
 });
-
 const User = mainDB.model('users', userSchema);
 
 const projectSchema = new mongoose.Schema({
@@ -35,7 +23,6 @@ const projectSchema = new mongoose.Schema({
   address: { type: String, required: true },
   password: { type: String, required: true }
 });
-
 const Project = mainDB.model('projects', projectSchema);
 
 const roomTypeSchema = new mongoose.Schema({
@@ -43,7 +30,6 @@ const roomTypeSchema = new mongoose.Schema({
   typeCode: { type: String, required: true },
   name: { type: String, required: true }
 });
-
 const RoomType = mainDB.model('roomTypes', roomTypeSchema);
 
 const roomConfigSchema = new mongoose.Schema({
@@ -52,10 +38,9 @@ const roomConfigSchema = new mongoose.Schema({
   typeCode: { type: String, required: true },
   config: { type: mongoose.Schema.Types.Mixed, required: true }
 });
-
 const RoomConfig = mainDB.model('roomConfigs', roomConfigSchema);
 
-// Initialize Users
+// 初始化用户
 const initUsers = async () => {
   const users = [
     { username: 'jackliu@haneco.com.au', password: 'kasta' }
@@ -69,6 +54,25 @@ const initUsers = async () => {
   }
 };
 
-initUsers();
+// 添加一些测试数据
+const initTestData = async () => {
+  // 添加项目
+  const project = new Project({ name: 'Project1', address: '123 Street', password: 'projectpass' });
+  await project.save();
 
-module.exports = { User, Project, RoomType, RoomConfig, localDB };
+  // 添加房间类型
+  const roomType = new RoomType({ projectId: project._id, typeCode: 'RT1', name: 'Room Type 1' });
+  await roomType.save();
+
+  // 添加房间配置
+  const roomConfig = new RoomConfig({ projectId: project._id, roomTypeId: roomType._id, typeCode: 'RT1', config: { setting: 'value' } });
+  await roomConfig.save();
+};
+
+mainDB.once('open', async function() {
+  await initUsers();
+  await initTestData();
+  console.log('Test data initialized');
+});
+
+module.exports = { User, Project, RoomType, RoomConfig };
