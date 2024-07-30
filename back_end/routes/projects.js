@@ -42,6 +42,12 @@ router.post('/', async (req, res) => {
       return res.status(400).json({ error: 'Invalid request format' });
     }
 
+    // 检查项目名称是否已经存在
+    const existingProject = await Project.findOne({ name });
+    if (existingProject) {
+      return res.status(409).json({ error: 'Project name already exists' });
+    }
+
     const newProject = new Project({
       name,
       address,
@@ -52,6 +58,12 @@ router.post('/', async (req, res) => {
     res.status(201).json(savedProject);
   } catch (error) {
     console.error("Error in POST /api/projects:", error);
+
+    // 判断是否为验证错误（例如，缺少必需字段）
+    if (error.name === 'ValidationError') {
+      return res.status(400).json({ error: 'Validation error', details: error.errors });
+    }
+
     res.status(500).send("Error adding the project.");
   }
 });
