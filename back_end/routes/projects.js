@@ -17,6 +17,10 @@ router.get('/', async (req, res) => {
 router.post('/delete', async (req, res) => {
   try {
     const projectId = req.body.id;
+    if (!projectId) {
+      return res.status(400).json({ error: 'Invalid request format' });
+    }
+
     const result = await Project.findByIdAndDelete(projectId); // Delete project from MongoDB
 
     if (result) {
@@ -26,7 +30,7 @@ router.post('/delete', async (req, res) => {
     }
   } catch (error) {
     console.error("Error in POST /api/projects/delete:", error);
-    res.status(500).send("Error deleting the project.");
+    res.status(500).send("Internal server error.");
   }
 });
 
@@ -34,6 +38,10 @@ router.post('/delete', async (req, res) => {
 router.post('/', async (req, res) => {
   try {
     const { name, address, password } = req.body;
+    if (!name || !address || !password) {
+      return res.status(400).json({ error: 'Invalid request format' });
+    }
+
     const newProject = new Project({
       name,
       address,
@@ -51,20 +59,57 @@ router.post('/', async (req, res) => {
 //! New route to verify project password
 router.post('/verify_password', async (req, res) => {
   const { id, password } = req.body;
-
+  // 检查请求格式
+  if (!id || !password) {
+    return res.status(400).json({ error: 'Invalid request format' });
+  }
   try {
+    // 查找项目
     const project = await Project.findById(id);
+    // 如果项目未找到，返回 404
     if (!project) {
       return res.status(404).json({ error: 'Project not found' });
     }
-
+    // 如果密码正确，返回 200
     if (project.password === password) {
       return res.status(200).json({ message: 'Password is correct' });
     } else {
+      // 如果密码不正确，返回 401
       return res.status(401).json({ error: 'Incorrect password' });
     }
   } catch (error) {
     console.error('Error in POST /api/projects/verify_password:', error);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+//! New route to update project
+router.put('/:id', async (req, res) => {
+  const { id } = req.params;
+  const { name, address, password } = req.body;
+
+  // 检查请求格式
+  if (!name && !address && !password) {
+    return res.status(400).json({ error: 'Invalid request format' });
+  }
+
+  try {
+    // 查找并更新项目
+    const updatedProject = await Project.findByIdAndUpdate(
+      id,
+      { name, address, password },
+      { new: true, runValidators: true }
+    );
+
+    // 如果项目未找到，返回 404
+    if (!updatedProject) {
+      return res.status(404).json({ error: 'Project not found' });
+    }
+
+    // 返回更新后的项目
+    res.status(200).json(updatedProject);
+  } catch (error) {
+    console.error('Error in PUT /api/projects/:id:', error);
     return res.status(500).json({ error: 'Internal server error' });
   }
 });
