@@ -26,11 +26,32 @@ router.get('/', authenticateToken, async (req, res) => {
 });
 
 // handle POST requests to add new room types
-router.post('/', authenticateToken, async (req, res) => {
+router.post('/:projectId/roomTypes', authenticateToken, async (req, res) => {
   try {
     const projectId = req.params.projectId;
     const { roomTypes } = req.body;
+
     console.log(`POST /api/projects/${projectId}/roomTypes`);
+
+    // 检查请求格式
+    if (!projectId) {
+      return res.status(400).json({ error: 'Project ID is required.' });
+    }
+
+    if (!Array.isArray(roomTypes)) {
+      return res.status(400).json({ error: 'RoomTypes must be an array.' });
+    }
+
+    for (const roomType of roomTypes) {
+      if (!roomType.name) {
+        return res.status(400).json({ error: 'Each roomType must have a name.' });
+      }
+    }
+
+    const existingProject = await Project.findById(projectId);
+    if (!existingProject) {
+      return res.status(404).json({ error: 'Project not found.' });
+    }
 
     const existingRoomTypes = await RoomType.find({ projectId });
     const existingRoomTypeNames = existingRoomTypes.map(rt => rt.name);
@@ -62,7 +83,7 @@ router.post('/', authenticateToken, async (req, res) => {
     });
   } catch (error) {
     console.error("Error in POST /api/projects/:projectId/roomTypes:", error);
-    res.status(500).send("Error adding the room types.");
+    res.status(500).send("Internal server error.");
   }
 });
 
