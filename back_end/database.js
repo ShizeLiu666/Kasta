@@ -1,52 +1,59 @@
 const mongoose = require('mongoose');
 
-mongoose.connect('mongodb://localhost:27017/kasta', {
+// Main database connection
+const mainDB = mongoose.createConnection('mongodb://174.138.109.122:27017/kasta', {
   useNewUrlParser: true,
   useUnifiedTopology: true
 });
 
-const db = mongoose.connection;
-
-db.on('error', console.error.bind(console, 'connection error:'));
-db.once('open', function() {
-  console.log('Connected to MongoDB');
+mainDB.on('error', console.error.bind(console, 'connection error:'));
+mainDB.once('open', function() {
+  console.log('Connected to main MongoDB');
 });
 
-// User Schema and Model
+// Another database connection (e.g., local development)
+const localDB = mongoose.createConnection('mongodb://localhost:27017/kasta', {
+  useNewUrlParser: true,
+  useUnifiedTopology: true
+});
+
+localDB.on('error', console.error.bind(console, 'connection error:'));
+localDB.once('open', function() {
+  console.log('Connected to local MongoDB');
+});
+
+// Define schemas and models for the main database
 const userSchema = new mongoose.Schema({
   username: String,
   password: String
 });
 
-const User = mongoose.model('users', userSchema);
+const User = mainDB.model('users', userSchema);
 
-// Project Schema and Model
 const projectSchema = new mongoose.Schema({
   name: { type: String, required: true },
   address: { type: String, required: true },
   password: { type: String, required: true }
 });
 
-const Project = mongoose.model('projects', projectSchema);
+const Project = mainDB.model('projects', projectSchema);
 
-// RoomType Schema and Model
 const roomTypeSchema = new mongoose.Schema({
   projectId: { type: mongoose.Schema.Types.ObjectId, ref: 'projects', required: true },
   typeCode: { type: String, required: true },
   name: { type: String, required: true }
 });
 
-const RoomType = mongoose.model('roomTypes', roomTypeSchema);
+const RoomType = mainDB.model('roomTypes', roomTypeSchema);
 
-// RoomConfig Schema and Model
 const roomConfigSchema = new mongoose.Schema({
   projectId: { type: mongoose.Schema.Types.ObjectId, ref: 'projects', required: true },
   roomTypeId: { type: mongoose.Schema.Types.ObjectId, ref: 'roomTypes', required: true },
-  typeCode: { type: String, required: true }, // Add typeCode field
+  typeCode: { type: String, required: true },
   config: { type: mongoose.Schema.Types.Mixed, required: true }
 });
 
-const RoomConfig = mongoose.model('roomConfigs', roomConfigSchema);
+const RoomConfig = mainDB.model('roomConfigs', roomConfigSchema);
 
 // Initialize Users
 const initUsers = async () => {
@@ -64,4 +71,4 @@ const initUsers = async () => {
 
 initUsers();
 
-module.exports = { User, Project, RoomType, RoomConfig };
+module.exports = { User, Project, RoomType, RoomConfig, localDB };
