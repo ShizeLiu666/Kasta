@@ -21,21 +21,7 @@ router.get('/', authenticateToken, async (req, res) => {
     res.status(200).json(roomTypes);
   } catch (error) {
     console.error("Error in GET /api/projects/:projectId/roomTypes:", error);
-    res.status(500).send("Error reading the room types data.");
-  }
-});
-
-// handle GET requests to download room types data
-router.get('/download', authenticateToken, async (req, res) => {
-  try {
-    const projectId = req.params.projectId;
-    console.log(`GET /api/projects/${projectId}/roomTypes/download`);
-    const roomTypes = await RoomType.find({ projectId });
-    res.setHeader('Content-Disposition', 'attachment; filename=roomTypes.json');
-    res.status(200).json(roomTypes);
-  } catch (error) {
-    console.error("Error in GET /api/projects/:projectId/roomTypes/download:", error);
-    res.status(500).send("Error processing your request.");
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
