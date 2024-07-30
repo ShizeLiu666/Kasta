@@ -54,25 +54,9 @@ const initUsers = async () => {
   }
 };
 
-// 添加一些测试数据
-const initTestData = async () => {
-  // 添加项目
-  const project = new Project({ name: 'Project1', address: '123 Street', password: 'projectpass' });
-  await project.save();
-
-  // 添加房间类型
-  const roomType = new RoomType({ projectId: project._id, typeCode: 'RT1', name: 'Room Type 1' });
-  await roomType.save();
-
-  // 添加房间配置
-  const roomConfig = new RoomConfig({ projectId: project._id, roomTypeId: roomType._id, typeCode: 'RT1', config: { setting: 'value' } });
-  await roomConfig.save();
-};
-
 mainDB.once('open', async function() {
   await initUsers();
-  await initTestData();
-  console.log('Test data initialized');
+  console.log('Users initialized');
 });
 
 module.exports = { User, Project, RoomType, RoomConfig };
