@@ -63,7 +63,7 @@ const checkAndInitializeCollections = async () => {
 
   if (!collectionNames.includes('users')) {
     await initUsers();
-    console.log('Users collection initialized');
+    console.log('Users collection initialized.');
   }
 
   if (!collectionNames.includes('projects')) {
