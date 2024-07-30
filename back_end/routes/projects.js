@@ -94,17 +94,20 @@ router.put('/:id', async (req, res) => {
   }
 
   try {
-    // 查找并更新项目
-    const updatedProject = await Project.findByIdAndUpdate(
-      id,
-      { name, address, password },
-      { new: true, runValidators: true }
-    );
+    // 查找项目
+    const project = await Project.findById(id);
 
     // 如果项目未找到，返回 404
-    if (!updatedProject) {
+    if (!project) {
       return res.status(404).json({ error: 'Project not found' });
     }
+
+    // 更新项目
+    project.name = name || project.name;
+    project.address = address || project.address;
+    project.password = password || project.password;
+
+    const updatedProject = await project.save();
 
     // 返回更新后的项目
     res.status(200).json(updatedProject);
