@@ -7,8 +7,11 @@ const mainDB = mongoose.createConnection('mongodb://174.138.109.122:27017/kasta'
 });
 
 mainDB.on('error', console.error.bind(console, 'connection error:'));
-mainDB.once('open', function() {
+mainDB.once('open', async function() {
   console.log('Connected to main MongoDB');
+
+  // 检查并初始化集合
+  await checkAndInitializeCollections();
 });
 
 // 定义模型
@@ -40,23 +43,43 @@ const roomConfigSchema = new mongoose.Schema({
 });
 const RoomConfig = mainDB.model('roomConfigs', roomConfigSchema);
 
-// 初始化用户
-const initUsers = async () => {
-  const users = [
-    { username: 'jackliu@haneco.com.au', password: 'kasta' }
-  ];
+// 检查并初始化集合
+const checkAndInitializeCollections = async () => {
+  const collections = await mainDB.db.listCollections().toArray();
+  const collectionNames = collections.map(col => col.name);
 
-  for (const user of users) {
-    const existingUser = await User.findOne({ username: user.username });
-    if (!existingUser) {
-      await new User(user).save();
+  const initUsers = async () => {
+    const users = [
+      { username: 'jackliu@haneco.com.au', password: 'kasta' }
+    ];
+
+    for (const user of users) {
+      const existingUser = await User.findOne({ username: user.username });
+      if (!existingUser) {
+        await new User(user).save();
+      }
     }
+  };
+
+  if (!collectionNames.includes('users')) {
+    await initUsers();
+    console.log('Users collection initialized');
+  }
+
+  if (!collectionNames.includes('projects')) {
+    await mainDB.createCollection('projects');
+    console.log('Projects collection initialized');
+  }
+
+  if (!collectionNames.includes('roomTypes')) {
+    await mainDB.createCollection('roomTypes');
+    console.log('RoomTypes collection initialized');
+  }
+
+  if (!collectionNames.includes('roomConfigs')) {
+    await mainDB.createCollection('roomConfigs');
+    console.log('RoomConfigs collection initialized');
   }
 };
-
-mainDB.once('open', async function() {
-  await initUsers();
-  console.log('Users initialized');
-});
 
 module.exports = { User, Project, RoomType, RoomConfig };
