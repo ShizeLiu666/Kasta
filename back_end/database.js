@@ -7,7 +7,9 @@ const mainDB = mongoose.createConnection('mongodb://admin:kasta_31July@174.138.1
   useUnifiedTopology: true
 });
 
-mainDB.on('error', console.error.bind(console, 'connection error:'));
+mainDB.on('error', (error) => {
+  console.error('Database connection error:', error);
+});
 mainDB.once('open', async function() {
   console.log('Connected to main MongoDB');
 
