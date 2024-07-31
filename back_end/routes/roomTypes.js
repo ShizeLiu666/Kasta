@@ -1,5 +1,5 @@
 const express = require('express');
-const { RoomType } = require('../database'); // Import the models
+const { RoomType, Project } = require('../database'); // Import the models
 const router = express.Router({ mergeParams: true });
 const authenticateToken = require('../middleware/auth');
 
@@ -12,10 +12,14 @@ const generateTypeCode = (name) => {
     .join('');
 };
 
-// handle GET requests for the room type list
+// 处理获取房型列表的 GET 请求
 router.get('/', authenticateToken, async (req, res) => {
   try {
     const projectId = req.params.projectId;
+    const project = await Project.findById(projectId);
+    if (!project) {
+      return res.status(404).json({ error: 'Project not found' });
+    }
     console.log(`GET /api/projects/${projectId}/roomTypes`);
     const roomTypes = await RoomType.find({ projectId });
     res.status(200).json(roomTypes);
@@ -25,84 +29,88 @@ router.get('/', authenticateToken, async (req, res) => {
   }
 });
 
-// handle POST requests to add new room types
+// 处理添加新房型的 POST 请求
 router.post('/', authenticateToken, async (req, res) => {
   try {
     const projectId = req.params.projectId;
-    const { roomTypes } = req.body;
+    const project = await Project.findById(projectId);
+    if (!project) {
+      return res.status(404).json({ error: 'Project not found' });
+    }
+    const { name } = req.body;
     console.log(`POST /api/projects/${projectId}/roomTypes`);
 
-    const existingRoomTypes = await RoomType.find({ projectId });
-    const existingRoomTypeNames = existingRoomTypes.map(rt => rt.name);
-
-    // 处理每个房型，生成 typeCode 并添加 projectId
-    const roomTypesToInsert = roomTypes.map(roomType => {
-      const typeCode = generateTypeCode(roomType.name);
-      return { ...roomType, projectId, typeCode };
-    });
-
-    // 检查是否有重复房型，并分离出非重复房型
-    const duplicateRoomTypes = roomTypesToInsert.filter(roomType => 
-      existingRoomTypeNames.includes(roomType.name)
-    );
-
-    const nonDuplicateRoomTypes = roomTypesToInsert.filter(roomType => 
-      !existingRoomTypeNames.includes(roomType.name)
-    );
-
-    // 插入非重复房型到数据库
-    if (nonDuplicateRoomTypes.length > 0) {
-      await RoomType.insertMany(nonDuplicateRoomTypes);
+    if (!name) {
+      return res.status(400).json({ error: 'Invalid request format' });
     }
 
-    res.status(200).json({
-      message: nonDuplicateRoomTypes.length > 0 ? "Room types added successfully." : "No new room types to add.",
-      duplicateRoomTypes: duplicateRoomTypes.map(rt => rt.name),
-      addedRoomTypes: nonDuplicateRoomTypes.map(rt => rt.name)
-    });
+    const typeCode = generateTypeCode(name);
+    const existingRoomType = await RoomType.findOne({ projectId, name });
+
+    if (existingRoomType) {
+      return res.status(409).json({ error: 'Room type already exists' });
+    }
+
+    const newRoomType = new RoomType({ projectId, name, typeCode });
+    const savedRoomType = await newRoomType.save();
+    res.status(201).json(savedRoomType);
   } catch (error) {
     console.error("Error in POST /api/projects/:projectId/roomTypes:", error);
-    res.status(500).send("Error adding the room types.");
+
+    if (error.name === 'ValidationError') {
+      return res.status(400).json({ error: 'Validation error', details: error.errors });
+    }
+
+    res.status(500).send("Error adding the room type.");
   }
 });
 
-// handle POST requests to delete multiple room types by room type IDs
+// 处理删除房型的 POST 请求
 router.post('/delete', authenticateToken, async (req, res) => {
   try {
-    const { roomTypeIds } = req.body;
-    console.log(`POST /api/projects/:projectId/roomTypes/delete`);
+    const projectId = req.params.projectId;
+    const project = await Project.findById(projectId);
+    if (!project) {
+      return res.status(404).json({ error: 'Project not found' });
+    }
 
-    const deleteResults = await Promise.all(roomTypeIds.map(async (roomTypeId) => {
-      const roomType = await RoomType.findById(roomTypeId);
+    const { roomTypeId } = req.body;
+    console.log(`POST /api/projects/${projectId}/roomTypes/delete`);
 
-      if (!roomType) {
-        return { roomTypeId, status: 'not found' };
-      }
+    if (!roomTypeId) {
+      return res.status(400).json({ error: 'Invalid request format' });
+    }
 
-      await RoomType.findByIdAndDelete(roomTypeId);
-      return { roomTypeId, status: 'deleted' };
-    }));
+    const roomType = await RoomType.findById(roomTypeId);
 
-    const notFoundRoomTypes = deleteResults.filter(result => result.status === 'not found').map(result => result.roomTypeId);
-    const deletedRoomTypes = deleteResults.filter(result => result.status === 'deleted').map(result => result.roomTypeId);
+    if (!roomType) {
+      return res.status(404).json({ error: 'Room type not found' });
+    }
 
-    res.status(200).json({
-      message: deletedRoomTypes.length > 0 ? "Room types processed" : "No room types deleted.",
-      notFoundRoomTypes,
-      deletedRoomTypes
-    });
+    await RoomType.findByIdAndDelete(roomTypeId);
+    res.status(200).json({ message: 'Room type deleted successfully' });
   } catch (error) {
     console.error("Error in POST /api/projects/:projectId/roomTypes/delete:", error);
-    res.status(500).send("Error deleting the room types.");
+    res.status(500).send("Error deleting the room type.");
   }
 });
 
-// handle PUT requests to update a room type by room type ID
+// 处理更新房型的 PUT 请求
 router.put('/:roomTypeId', authenticateToken, async (req, res) => {
   try {
+    const projectId = req.params.projectId;
+    const project = await Project.findById(projectId);
+    if (!project) {
+      return res.status(404).json({ error: 'Project not found' });
+    }
+
     const { roomTypeId } = req.params;
     const { name } = req.body;
     console.log(`PUT /api/projects/${projectId}/roomTypes/${roomTypeId}`);
+
+    if (!name) {
+      return res.status(400).json({ error: 'Invalid request format' });
+    }
 
     const typeCode = generateTypeCode(name);
 
