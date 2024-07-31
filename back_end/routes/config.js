@@ -26,11 +26,18 @@ const getTypeCode = async (roomTypeId) => {
   return roomType ? roomType.typeCode : null;
 };
 
-// handle GET requests for room type files
+// 处理 GET 请求，获取房型文件列表
 router.get('/files', authenticateToken, async (req, res) => {
   const { projectId, roomTypeId } = req.params;
 
   try {
+    const projectExists = await Project.exists({ _id: projectId });
+    const roomTypeExists = await RoomType.exists({ _id: roomTypeId });
+
+    if (!projectExists || !roomTypeExists) {
+      return res.status(404).json({ error: "Project or Room Type not found" });
+    }
+
     const roomConfigs = await RoomConfig.find({ projectId, roomTypeId });
     res.status(200).json(roomConfigs);
   } catch (error) {
@@ -39,23 +46,7 @@ router.get('/files', authenticateToken, async (req, res) => {
   }
 });
 
-// handle GET requests to download a room type file
-router.get('/files/:fileName', authenticateToken, async (req, res) => {
-  const { projectId, roomTypeId, fileName } = req.params;
-
-  try {
-    const roomConfig = await RoomConfig.findOne({ projectId, roomTypeId, fileName });
-    if (!roomConfig) {
-      return res.status(404).send("File not found");
-    }
-    res.status(200).json(roomConfig.config);
-  } catch (error) {
-    console.error("Error in GET /api/config/:projectId/:roomTypeId/files/:fileName:", error);
-    res.status(500).send("Error fetching file");
-  }
-});
-
-// handle POST requests to upload a new file for a room type
+// 处理 POST 请求，上传新文件
 router.post('/files', authenticateToken, upload.single('file'), async (req, res) => {
   const { projectId, roomTypeId } = req.params;
   const { file } = req;
@@ -65,6 +56,13 @@ router.post('/files', authenticateToken, upload.single('file'), async (req, res)
   }
 
   try {
+    const projectExists = await Project.exists({ _id: projectId });
+    const roomTypeExists = await RoomType.exists({ _id: roomTypeId });
+
+    if (!projectExists || !roomTypeExists) {
+      return res.status(404).json({ error: "Project or Room Type not found" });
+    }
+
     const existingConfig = await RoomConfig.findOne({ projectId, roomTypeId });
     if (existingConfig) {
       return res.status(409).send("Configuration for this room type already exists");
@@ -92,7 +90,7 @@ router.post('/files', authenticateToken, upload.single('file'), async (req, res)
   }
 });
 
-// handle PUT requests to replace a file for a room type
+// 处理 PUT 请求，替换文件
 router.put('/files', authenticateToken, upload.single('file'), async (req, res) => {
   const { projectId, roomTypeId } = req.params;
   const { file } = req;
@@ -102,12 +100,11 @@ router.put('/files', authenticateToken, upload.single('file'), async (req, res) 
   }
 
   try {
-    // 确保 projectId 和 roomTypeId 存在
     const projectExists = await Project.exists({ _id: projectId });
     const roomTypeExists = await RoomType.exists({ _id: roomTypeId });
 
     if (!projectExists || !roomTypeExists) {
-      return res.status(404).send("Project or Room Type not found");
+      return res.status(404).json({ error: "Project or Room Type not found" });
     }
 
     const content = JSON.parse(file.buffer.toString('utf-8'));
@@ -133,11 +130,18 @@ router.put('/files', authenticateToken, upload.single('file'), async (req, res) 
   }
 });
 
-// handle DELETE requests to delete a file for a room type
+// 处理 DELETE 请求，删除文件
 router.delete('/files', authenticateToken, async (req, res) => {
   const { projectId, roomTypeId } = req.params;
 
   try {
+    const projectExists = await Project.exists({ _id: projectId });
+    const roomTypeExists = await RoomType.exists({ _id: roomTypeId });
+
+    if (!projectExists || !roomTypeExists) {
+      return res.status(404).json({ error: "Project or Room Type not found" });
+    }
+
     const roomConfig = await RoomConfig.findOneAndDelete({ projectId, roomTypeId });
 
     if (!roomConfig) {
