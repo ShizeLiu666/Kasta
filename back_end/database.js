@@ -1,21 +1,25 @@
 const mongoose = require('mongoose');
+const bcrypt = require('bcrypt');
 
-//! 连接到主数据库
+// 连接到主数据库
 const mainDB = mongoose.createConnection('mongodb://174.138.109.122:27017/kasta', {
   useNewUrlParser: true,
   useUnifiedTopology: true
 });
 
 mainDB.on('error', console.error.bind(console, 'connection error:'));
-mainDB.once('open', function() {
+mainDB.once('open', async function() {
   console.log('Connected to main MongoDB');
+
+  // 检查并初始化用户
+  await initializeUser();
 });
 
-//! 定义模型
+// 定义模型
 // 用户模型
 const userSchema = new mongoose.Schema({
-  username: String,
-  password: String
+  username: { type: String, required: true, unique: true },
+  password: { type: String, required: true }
 });
 const User = mainDB.model('users', userSchema);
 
@@ -43,6 +47,27 @@ const roomConfigSchema = new mongoose.Schema({
   config: { type: mongoose.Schema.Types.Mixed, required: true }
 });
 const RoomConfig = mainDB.model('roomConfigs', roomConfigSchema);
+
+// 初始化用户
+const initializeUser = async () => {
+  const defaultUser = {
+    username: 'jackliu@haneco.com.au',
+    password: 'kasta'
+  };
+
+  const user = await User.findOne({ username: defaultUser.username });
+  if (!user) {
+    const hashedPassword = await bcrypt.hash(defaultUser.password, 10);
+    const newUser = new User({
+      username: defaultUser.username,
+      password: hashedPassword
+    });
+    await newUser.save();
+    console.log('Default user initialized.');
+  } else {
+    console.log('Default user already exists.');
+  }
+};
 
 // 导出模型供其他模块使用
 module.exports = { User, Project, RoomType, RoomConfig };
