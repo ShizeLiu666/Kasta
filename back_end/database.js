@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 const bcrypt = require('bcrypt');
 
 // 连接到主数据库
-const mainDB = mongoose.createConnection('mongodb://174.138.109.122:27017/kasta', {
+const mainDB = mongoose.createConnection('mongodb://admin:kasta_31July@174.138.109.122:27017/kasta?authSource=admin', {
   useNewUrlParser: true,
   useUnifiedTopology: true
 });
