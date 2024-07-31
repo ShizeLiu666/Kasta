@@ -25,7 +25,7 @@ app.options('*', cors()); // Enable pre-flight (OPTIONS) requests for all routes
 app.use('/api/projects', projectsRouter);
 app.use('/api/auth', authRouter);
 app.use('/api/projects/:projectId/roomTypes', roomTypesRouter);
-app.use('/api/config/:projectId/:roomTypeId', configRouter); // Updated route for config
+app.use('/api/config/:projectId/:roomTypeId', configRouter);
 app.use('/api/excelToJson', excelToJsonRouter);
 
 app.use((err, req, res, next) => {
