@@ -1,5 +1,5 @@
 const express = require('express');
-const { RoomConfig, RoomType, Project } = require('../database');
+const { RoomConfig, RoomType, Project } = require('../database'); // 确保正确导入模型
 const router = express.Router({ mergeParams: true });
 const authenticateToken = require('../middleware/auth');
 const multer = require('multer');
@@ -36,6 +36,9 @@ router.get('/:projectId/:roomTypeId/files', authenticateToken, async (req, res) 
 
     const projectExists = await Project.exists({ _id: projectId });
     const roomTypeExists = await RoomType.exists({ _id: roomTypeId });
+
+    console.log(`Project exists: ${projectExists}`);
+    console.log(`Room Type exists: ${roomTypeExists}`);
 
     if (!projectExists) {
       console.log('Project not found');
