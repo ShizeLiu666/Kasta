@@ -1,5 +1,5 @@
 const express = require('express');
-const { RoomConfig, RoomType, Project } = require('../database'); // 确保正确导入模型
+const { RoomConfig, RoomType, Project } = require('../database');
 const router = express.Router({ mergeParams: true });
 const authenticateToken = require('../middleware/auth');
 const multer = require('multer');
