@@ -65,7 +65,7 @@ router.post('/', authenticateToken, async (req, res) => {
   }
 });
 
-// 处理删除房型的 POST 请求
+// TODO 处理删除房型的 POST 请求
 router.post('/delete', authenticateToken, async (req, res) => {
   try {
     const projectId = req.params.projectId;
@@ -75,20 +75,23 @@ router.post('/delete', authenticateToken, async (req, res) => {
     }
 
     const { roomTypeId } = req.body;
-    console.log(`POST /api/projects/${projectId}/roomTypes/delete`);
-
     if (!roomTypeId) {
       return res.status(400).json({ error: 'Invalid request format' });
     }
 
     const roomType = await RoomType.findById(roomTypeId);
-
     if (!roomType) {
       return res.status(404).json({ error: 'Room type not found' });
     }
 
+    // 删除房型
     await RoomType.findByIdAndDelete(roomTypeId);
-    res.status(200).json({ message: 'Room type deleted successfully' });
+
+    // 删除房型对应的文件夹
+    const folderPath = path.join(__dirname, '..', 'json_lists', projectId, roomType.typeCode);
+    fs.rmdirSync(folderPath, { recursive: true });
+
+    res.status(200).json({ message: 'Room type and related folder deleted successfully' });
   } catch (error) {
     console.error("Error in POST /api/projects/:projectId/roomTypes/delete:", error);
     res.status(500).send("Error deleting the room type.");

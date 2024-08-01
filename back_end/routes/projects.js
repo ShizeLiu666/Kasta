@@ -13,7 +13,7 @@ router.get('/', async (req, res) => {
   }
 });
 
-// handle POST requests to delete a project by id
+// TODO handle POST requests to delete a project by id
 router.post('/delete', async (req, res) => {
   try {
     const projectId = req.body.id;
@@ -21,10 +21,22 @@ router.post('/delete', async (req, res) => {
       return res.status(400).json({ error: 'Invalid request format' });
     }
 
-    const result = await Project.findByIdAndDelete(projectId); // Delete project from MongoDB
+    // Find and delete all room types associated with the project
+    const roomTypes = await RoomType.find({ projectId });
+    for (const roomType of roomTypes) {
+      // Delete all configurations associated with the room type
+      const configPath = path.join(__dirname, '..', 'json_lists', projectId, roomType.typeCode);
+      fs.rmdirSync(configPath, { recursive: true });
+
+      // Delete the room type
+      await RoomType.findByIdAndDelete(roomType._id);
+    }
+
+    // Delete the project
+    const result = await Project.findByIdAndDelete(projectId);
 
     if (result) {
-      res.status(200).json({ message: 'Project deleted successfully' });
+      res.status(200).json({ message: 'Project and related room types and configurations deleted successfully' });
     } else {
       res.status(404).json({ error: 'Project not found' });
     }
@@ -33,6 +45,9 @@ router.post('/delete', async (req, res) => {
     res.status(500).send("Internal server error.");
   }
 });
+
+module.exports = router;
+
 
 // handle POST requests to add a new project
 router.post('/', async (req, res) => {
