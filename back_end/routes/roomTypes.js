@@ -2,6 +2,8 @@ const express = require('express');
 const { RoomType, RoomConfig, Project } = require('../database'); // Import the models
 const router = express.Router({ mergeParams: true });
 const authenticateToken = require('../middleware/auth');
+const fs = require('fs');
+const path = require('path'); // Ensure `path` module is imported
 
 // 生成 typeCode 的函数
 const generateTypeCode = (name) => {

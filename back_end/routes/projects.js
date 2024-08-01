@@ -1,6 +1,8 @@
 const express = require('express');
 const { RoomType, RoomConfig, Project } = require('../database'); // Import the Project model
 const router = express.Router();
+const fs = require('fs');
+const path = require('path'); // Ensure `path` module is imported
 
 // handle GET requests for the projects list
 router.get('/', async (req, res) => {
