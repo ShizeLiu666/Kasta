@@ -66,33 +66,43 @@ router.post('/', authenticateToken, async (req, res) => {
 });
 
 // TODO 处理删除房型的 POST 请求
+// 处理删除房型的 POST 请求
 router.post('/delete', authenticateToken, async (req, res) => {
   try {
     const projectId = req.params.projectId;
+    console.log(`Deleting room type for project: ${projectId}`);
     const project = await Project.findById(projectId);
     if (!project) {
+      console.log('Project not found');
       return res.status(404).json({ error: 'Project not found' });
     }
 
     const { roomTypeId } = req.body;
     if (!roomTypeId) {
+      console.log('Invalid request format');
       return res.status(400).json({ error: 'Invalid request format' });
     }
 
     const roomType = await RoomType.findById(roomTypeId);
     if (!roomType) {
+      console.log('Room type not found');
       return res.status(404).json({ error: 'Room type not found' });
     }
 
     // 删除与该房型相关的所有配置文件
-    await RoomConfig.deleteMany({ projectId: projectId, roomTypeId: roomTypeId });
+    await RoomConfig.deleteMany({ roomTypeId: roomTypeId });
+    console.log(`Deleted room configurations for room type: ${roomTypeId}`);
 
     // 删除房型
     await RoomType.findByIdAndDelete(roomTypeId);
+    console.log(`Deleted room type: ${roomTypeId}`);
 
     // 删除房型对应的文件夹
     const folderPath = path.join(__dirname, '..', 'json_lists', projectId, roomType.typeCode);
-    fs.rmdirSync(folderPath, { recursive: true });
+    if (fs.existsSync(folderPath)) {
+      fs.rmdirSync(folderPath, { recursive: true });
+      console.log(`Deleted folder: ${folderPath}`);
+    }
 
     res.status(200).json({ message: 'Room type and related configurations and folder deleted successfully' });
   } catch (error) {
