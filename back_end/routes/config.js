@@ -3,6 +3,7 @@ const { RoomConfig, RoomType, Project } = require('../database'); // Import the 
 const router = express.Router({ mergeParams: true });
 const authenticateToken = require('../middleware/auth');
 const multer = require('multer');
+const fs = require('fs');
 const path = require('path');
 
 // 使用内存存储读取文件内容
@@ -131,7 +132,7 @@ router.put('/files', authenticateToken, upload.single('file'), async (req, res) 
 });
 
 // 处理 DELETE 请求，删除文件
-router.delete('/files', authenticateToken, async (req, res) => {
+router.delete('/:projectId/:roomTypeId/files', authenticateToken, async (req, res) => {
   const { projectId, roomTypeId } = req.params;
 
   try {
@@ -146,6 +147,13 @@ router.delete('/files', authenticateToken, async (req, res) => {
 
     if (!roomConfig) {
       return res.status(404).send("Configuration not found");
+    }
+
+    // 删除文件系统中的文件
+    const folderPath = path.join(__dirname, '..', 'json_lists', projectId, roomTypeId);
+    if (fs.existsSync(folderPath)) {
+      fs.rmdirSync(folderPath, { recursive: true });
+      console.log(`Deleted folder: ${folderPath}`);
     }
 
     res.status(200).send("Configuration deleted successfully");
