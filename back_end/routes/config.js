@@ -32,17 +32,19 @@ router.get('/files', authenticateToken, async (req, res) => {
   const { projectId, roomTypeId } = req.params;
 
   try {
+    // 检查项目是否存在
     const projectExists = await Project.exists({ _id: projectId });
-    const roomTypeExists = await RoomType.exists({ _id: roomTypeId });
-
     if (!projectExists) {
       return res.status(404).json({ error: "Project not found" });
     }
 
+    // 检查房型是否存在
+    const roomTypeExists = await RoomType.exists({ _id: roomTypeId });
     if (!roomTypeExists) {
       return res.status(404).json({ error: "Room Type not found" });
     }
 
+    // 获取房型配置
     const roomConfigs = await RoomConfig.find({ projectId, roomTypeId });
     if (!roomConfigs.length) {
       return res.status(404).json({ error: "No configurations found" });
@@ -50,6 +52,7 @@ router.get('/files', authenticateToken, async (req, res) => {
 
     res.status(200).json(roomConfigs);
   } catch (error) {
+    console.error('Error fetching files:', error); // 打印错误日志以便调试
     res.status(500).send("Error fetching files");
   }
 });
