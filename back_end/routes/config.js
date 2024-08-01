@@ -32,14 +32,27 @@ router.get('/:projectId/:roomTypeId/files', authenticateToken, async (req, res) 
   const { projectId, roomTypeId } = req.params;
 
   try {
+    console.log(`GET request received for projectId: ${projectId} and roomTypeId: ${roomTypeId}`);
+
     const projectExists = await Project.exists({ _id: projectId });
     const roomTypeExists = await RoomType.exists({ _id: roomTypeId });
 
-    if (!projectExists || !roomTypeExists) {
-      return res.status(404).json({ error: "Project or Room Type not found" });
+    if (!projectExists) {
+      console.log('Project not found');
+      return res.status(404).json({ error: "Project not found" });
+    }
+
+    if (!roomTypeExists) {
+      console.log('Room Type not found');
+      return res.status(404).json({ error: "Room Type not found" });
     }
 
     const roomConfigs = await RoomConfig.find({ projectId, roomTypeId });
+    if (!roomConfigs.length) {
+      console.log('No configurations found');
+      return res.status(404).json({ error: "No configurations found" });
+    }
+
     res.status(200).json(roomConfigs);
   } catch (error) {
     console.error("Error in GET /api/config/:projectId/:roomTypeId/files:", error);
@@ -136,16 +149,25 @@ router.delete('/:projectId/:roomTypeId/files', authenticateToken, async (req, re
   const { projectId, roomTypeId } = req.params;
 
   try {
+    console.log(`DELETE request received for projectId: ${projectId} and roomTypeId: ${roomTypeId}`);
+
     const projectExists = await Project.exists({ _id: projectId });
     const roomTypeExists = await RoomType.exists({ _id: roomTypeId });
 
-    if (!projectExists || !roomTypeExists) {
-      return res.status(404).json({ error: "Project or Room Type not found" });
+    if (!projectExists) {
+      console.log('Project not found');
+      return res.status(404).json({ error: "Project not found" });
+    }
+
+    if (!roomTypeExists) {
+      console.log('Room Type not found');
+      return res.status(404).json({ error: "Room Type not found" });
     }
 
     const roomConfig = await RoomConfig.findOneAndDelete({ projectId, roomTypeId });
 
     if (!roomConfig) {
+      console.log('Configuration not found');
       return res.status(404).send("Configuration not found");
     }
 
