@@ -21,12 +21,19 @@ router.post('/delete', async (req, res) => {
       return res.status(400).json({ error: 'Invalid request format' });
     }
 
-    // Find and delete all room types associated with the project
+    // Find all room types associated with the project
     const roomTypes = await RoomType.find({ projectId });
+
+    // Delete all configurations and folders associated with each room type
     for (const roomType of roomTypes) {
       // Delete all configurations associated with the room type
-      const configPath = path.join(__dirname, '..', 'json_lists', projectId, roomType.typeCode);
-      fs.rmdirSync(configPath, { recursive: true });
+      await RoomConfig.deleteMany({ roomTypeId: roomType._id });
+
+      // Delete the room type folder
+      const folderPath = path.join(__dirname, '..', 'json_lists', projectId, roomType.typeCode);
+      if (fs.existsSync(folderPath)) {
+        fs.rmdirSync(folderPath, { recursive: true });
+      }
 
       // Delete the room type
       await RoomType.findByIdAndDelete(roomType._id);
@@ -45,9 +52,6 @@ router.post('/delete', async (req, res) => {
     res.status(500).send("Internal server error.");
   }
 });
-
-module.exports = router;
-
 
 // handle POST requests to add a new project
 router.post('/', async (req, res) => {

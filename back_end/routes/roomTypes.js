@@ -84,6 +84,9 @@ router.post('/delete', authenticateToken, async (req, res) => {
       return res.status(404).json({ error: 'Room type not found' });
     }
 
+    // 删除与该房型相关的所有配置文件
+    await RoomConfig.deleteMany({ projectId: projectId, roomTypeId: roomTypeId });
+
     // 删除房型
     await RoomType.findByIdAndDelete(roomTypeId);
 
@@ -91,7 +94,7 @@ router.post('/delete', authenticateToken, async (req, res) => {
     const folderPath = path.join(__dirname, '..', 'json_lists', projectId, roomType.typeCode);
     fs.rmdirSync(folderPath, { recursive: true });
 
-    res.status(200).json({ message: 'Room type and related folder deleted successfully' });
+    res.status(200).json({ message: 'Room type and related configurations and folder deleted successfully' });
   } catch (error) {
     console.error("Error in POST /api/projects/:projectId/roomTypes/delete:", error);
     res.status(500).send("Error deleting the room type.");
