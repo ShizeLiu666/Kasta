@@ -28,43 +28,34 @@ const getTypeCode = async (roomTypeId) => {
 };
 
 // 处理 GET 请求，获取房型文件列表
-router.get('/:projectId/:roomTypeId/files', authenticateToken, async (req, res) => {
+router.get('/files', authenticateToken, async (req, res) => {
   const { projectId, roomTypeId } = req.params;
 
   try {
-    console.log(`GET request received for projectId: ${projectId} and roomTypeId: ${roomTypeId}`);
-
     const projectExists = await Project.exists({ _id: projectId });
     const roomTypeExists = await RoomType.exists({ _id: roomTypeId });
 
-    console.log(`Project exists: ${projectExists}`);
-    console.log(`Room Type exists: ${roomTypeExists}`);
-
     if (!projectExists) {
-      console.log('Project not found');
       return res.status(404).json({ error: "Project not found" });
     }
 
     if (!roomTypeExists) {
-      console.log('Room Type not found');
       return res.status(404).json({ error: "Room Type not found" });
     }
 
     const roomConfigs = await RoomConfig.find({ projectId, roomTypeId });
     if (!roomConfigs.length) {
-      console.log('No configurations found');
       return res.status(404).json({ error: "No configurations found" });
     }
 
     res.status(200).json(roomConfigs);
   } catch (error) {
-    console.error("Error in GET /api/config/:projectId/:roomTypeId/files:", error);
     res.status(500).send("Error fetching files");
   }
 });
 
 // 处理 POST 请求，上传新文件
-router.post('/:projectId/:roomTypeId/files', authenticateToken, upload.single('file'), async (req, res) => {
+router.post('/files', authenticateToken, upload.single('file'), async (req, res) => {
   const { projectId, roomTypeId } = req.params;
   const { file } = req;
 
@@ -102,13 +93,12 @@ router.post('/:projectId/:roomTypeId/files', authenticateToken, upload.single('f
       config: content
     });
   } catch (error) {
-    console.error("Error uploading file:", error.message);
     res.status(500).send("Error uploading file");
   }
 });
 
 // 处理 PUT 请求，替换文件
-router.put('/:projectId/:roomTypeId/files', authenticateToken, upload.single('file'), async (req, res) => {
+router.put('/files', authenticateToken, upload.single('file'), async (req, res) => {
   const { projectId, roomTypeId } = req.params;
   const { file } = req;
 
@@ -142,35 +132,29 @@ router.put('/:projectId/:roomTypeId/files', authenticateToken, upload.single('fi
       config: content
     });
   } catch (error) {
-    console.error("Error replacing file:", error.message);
     res.status(500).send("Error replacing file");
   }
 });
 
 // 处理 DELETE 请求，删除文件
-router.delete('/:projectId/:roomTypeId/files', authenticateToken, async (req, res) => {
+router.delete('/files', authenticateToken, async (req, res) => {
   const { projectId, roomTypeId } = req.params;
 
   try {
-    console.log(`DELETE request received for projectId: ${projectId} and roomTypeId: ${roomTypeId}`);
-
     const projectExists = await Project.exists({ _id: projectId });
     const roomTypeExists = await RoomType.exists({ _id: roomTypeId });
 
     if (!projectExists) {
-      console.log('Project not found');
       return res.status(404).json({ error: "Project not found" });
     }
 
     if (!roomTypeExists) {
-      console.log('Room Type not found');
       return res.status(404).json({ error: "Room Type not found" });
     }
 
     const roomConfig = await RoomConfig.findOneAndDelete({ projectId, roomTypeId });
 
     if (!roomConfig) {
-      console.log('Configuration not found');
       return res.status(404).send("Configuration not found");
     }
 
@@ -178,12 +162,10 @@ router.delete('/:projectId/:roomTypeId/files', authenticateToken, async (req, re
     const folderPath = path.join(__dirname, '..', 'json_lists', projectId, roomConfig.typeCode);
     if (fs.existsSync(folderPath)) {
       fs.rmdirSync(folderPath, { recursive: true });
-      console.log(`Deleted folder: ${folderPath}`);
     }
 
     res.status(200).send("Configuration deleted successfully");
   } catch (error) {
-    console.error("Error deleting configuration:", error.message);
     res.status(500).send("Error deleting configuration");
   }
 });
