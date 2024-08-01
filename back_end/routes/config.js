@@ -1,5 +1,5 @@
 const express = require('express');
-const { RoomConfig, RoomType, Project } = require('../database'); // Import the RoomConfig, RoomType, and Project model
+const { RoomConfig, RoomType, Project } = require('../database'); // 确保正确导入模型
 const router = express.Router({ mergeParams: true });
 const authenticateToken = require('../middleware/auth');
 const multer = require('multer');
@@ -28,7 +28,7 @@ const getTypeCode = async (roomTypeId) => {
 };
 
 // 处理 GET 请求，获取房型文件列表
-router.get('/files', authenticateToken, async (req, res) => {
+router.get('/:projectId/:roomTypeId/files', authenticateToken, async (req, res) => {
   const { projectId, roomTypeId } = req.params;
 
   try {
@@ -48,7 +48,7 @@ router.get('/files', authenticateToken, async (req, res) => {
 });
 
 // 处理 POST 请求，上传新文件
-router.post('/files', authenticateToken, upload.single('file'), async (req, res) => {
+router.post('/:projectId/:roomTypeId/files', authenticateToken, upload.single('file'), async (req, res) => {
   const { projectId, roomTypeId } = req.params;
   const { file } = req;
 
@@ -92,7 +92,7 @@ router.post('/files', authenticateToken, upload.single('file'), async (req, res)
 });
 
 // 处理 PUT 请求，替换文件
-router.put('/files', authenticateToken, upload.single('file'), async (req, res) => {
+router.put('/:projectId/:roomTypeId/files', authenticateToken, upload.single('file'), async (req, res) => {
   const { projectId, roomTypeId } = req.params;
   const { file } = req;
 
@@ -150,7 +150,7 @@ router.delete('/:projectId/:roomTypeId/files', authenticateToken, async (req, re
     }
 
     // 删除文件系统中的文件
-    const folderPath = path.join(__dirname, '..', 'json_lists', projectId, roomTypeId);
+    const folderPath = path.join(__dirname, '..', 'json_lists', projectId, roomConfig.typeCode);
     if (fs.existsSync(folderPath)) {
       fs.rmdirSync(folderPath, { recursive: true });
       console.log(`Deleted folder: ${folderPath}`);
