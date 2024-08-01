@@ -1,5 +1,5 @@
 const express = require('express');
-const { Project } = require('../database'); // Import the Project model
+const { RoomType, RoomConfig, Project } = require('../database'); // Import the Project model
 const router = express.Router();
 
 // handle GET requests for the projects list

@@ -1,5 +1,5 @@
 const express = require('express');
-const { RoomType, Project } = require('../database'); // Import the models
+const { RoomType, RoomConfig, Project } = require('../database'); // Import the models
 const router = express.Router({ mergeParams: true });
 const authenticateToken = require('../middleware/auth');
 
