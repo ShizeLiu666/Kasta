@@ -4,7 +4,7 @@ const mongoURI_development = 'mongodb://localhost:27017';
 const production_development = 'mongodb://admin:kasta_31July@174.138.109.122:27017/kasta?authSource=admin';
 
 // 连接到数据库
-const mainDB = mongoose.createConnection(mongoURI_development, {
+const mainDB = mongoose.createConnection(production_development, {
   // useNewUrlParser: true,
   // useUnifiedTopology: true
 });
