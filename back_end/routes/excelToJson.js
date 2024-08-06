@@ -28,19 +28,19 @@ const upload = multer({
 
 router.post('/convert', (req, res, next) => {
   upload.single('file')(req, res, (err) => {
+    if (!req.file) {
+      console.error('No file uploaded or invalid file type'); // 打印无文件或无效文件类型错误
+      return res.status(400).json({ error: 'No file uploaded or file type is incorrect. Only Excel files are allowed.' });
+    }
+    
     if (err) {
       console.error('Multer error:', err.message); // 打印 Multer 错误
       return res.status(400).json({ error: err.message });
     }
 
-    if (!req.file) {
-      console.error('No file uploaded or invalid file type'); // 打印无文件或无效文件类型错误
-      return res.status(400).json({ error: 'No file uploaded or file type is incorrect. Only Excel files are allowed.' });
-    }
-
     console.log('File uploaded successfully:', req.file.originalname); // 打印成功上传的文件名
 
-    const scriptPath = path.join(__dirname, '..', 'convert.py'); // 确保路径正确
+    const scriptPath = path.join(__dirname, '..', 'convert.py'); // 更新路径指向正确的位置
     console.log('Script path:', scriptPath); // 打印脚本路径
 
     const pythonExecutable = 'python'; // 或者 'python3' 取决于你的系统

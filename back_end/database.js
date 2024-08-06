@@ -1,10 +1,12 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcrypt');
+const mongoURI_development = 'mongodb://localhost:27017';
+const production_development = 'mongodb://admin:kasta_31July@174.138.109.122:27017/kasta?authSource=admin';
 
-// 连接到主数据库
-const mainDB = mongoose.createConnection('mongodb://admin:kasta_31July@174.138.109.122:27017/kasta?authSource=admin', {
-  useNewUrlParser: true,
-  useUnifiedTopology: true
+// 连接到数据库
+const mainDB = mongoose.createConnection(mongoURI_development, {
+  // useNewUrlParser: true,
+  // useUnifiedTopology: true
 });
 
 mainDB.on('error', (error) => {

@@ -47,15 +47,15 @@ def process_groups(split_data):
     groups_content = split_data.get("groups", [])
     groups_data = []
     for line in groups_content:
-        if line.startswith("TOTAL 0 GROUP"):
-            break
         if line.startswith("TOTAL"):
             continue
-        if line.startswith("DEVICE CONTROL"):
-            continue 
-        if "GROUP" in line:
+        if "SCENE" in line:
             continue
-        if line:
+        if line.startswith("DEVICE CONTROL"):
+            continue
+        if line.startswith("BLIND GROUP"):
+            continue
+        if line and not line.startswith("BUTTON") and not any(keyword in line for keyword in ["ON", "OFF", "+"]):
             groups_data.append({
                 "groupName": line,
                 "devices": []
@@ -67,23 +67,23 @@ def process_remote_controls(split_data):
     remote_controls_data = []
     current_remote = None
     current_links = []
-    scene_keywords = ["BRIGHT", "OFF", "SOFT", "ON", "MOOD"]
+    remote_control_keywords = ["6IN", "4OUT", "S01", "S02", "S03", "S04", "S05", "S06", "S07", "S08", "S09", "S10", "S11", "S12", "S13"]
     for line in remote_controls_content:
         if line.startswith("TOTAL"):
             continue
-        if line.startswith("NAME:"):
+        if line.strip() in remote_control_keywords:
             if current_remote:
                 remote_controls_data.append({
                     "remoteName": current_remote,
                     "links": current_links
                 })
-            current_remote = line.replace("NAME: ", "").strip()
+            current_remote = line.strip()
             current_links = []
         elif line.startswith("BUTTON"):
             parts = line.split(":")
             button_index = int(parts[0].replace("BUTTON", "").strip()) - 1
             button_name = parts[1].strip()
-            if any(keyword in button_name for keyword in scene_keywords):
+            if "SCENE" in button_name:
                 link_type = 2
             elif "DND" in button_name:
                 link_type = 3
@@ -135,26 +135,49 @@ def process_scenes(split_data):
     scenes_data = []
     current_scene = None
     current_controls = []
+    remote_control_keywords = [
+        "BRIGHT",
+        "OFF",
+        "SOFT",
+        "BATH ON",
+        "BATH OFF",
+        "BATH MOOD",
+        "WELCOME",
+        "OCCUPIED",
+        "SMALL BATH ON",
+        "SMALL BATH OFF",
+        "SMALL BATH MOOD",
+        "BED BRIGHT",
+        "BED OFF",
+        "BED SOFT",
+        "DINING BRIGHT",
+        "DINING OFF",
+        "DINING SOFT",
+        "LIVING BRIGHT",
+        "LIVING OFF",
+        "LIVING SOFT"
+    ]
+
     for line in scenes_content:
         if line.startswith("TOTAL"):
             continue
-        if line.startswith("NAME:"):
+        if line in remote_control_keywords:
             if current_scene:
                 scenes_data.append({
                     "sceneName": current_scene,
                     "contents": parse_scene_content(current_controls)
                 })
-            current_scene = line.replace("NAME: ", "").strip()
+            current_scene = line
             current_controls = []
-        elif line.startswith("CONTROL CONTENT:"):
-            continue
         else:
             current_controls.append(line)
+    
     if current_scene:
         scenes_data.append({
             "sceneName": current_scene,
             "contents": parse_scene_content(current_controls)
         })
+
     return {"scenes": scenes_data}
 
 def split_json_file(input_data):

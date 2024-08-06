@@ -2,24 +2,8 @@ const express = require('express');
 const { RoomConfig, RoomType, Project } = require('../database'); // 确保正确导入模型
 const router = express.Router({ mergeParams: true });
 const authenticateToken = require('../middleware/auth');
-const multer = require('multer');
 const fs = require('fs');
 const path = require('path');
-
-// 使用内存存储读取文件内容
-const storage = multer.memoryStorage();
-
-const upload = multer({
-  storage: storage,
-  fileFilter: (req, file, cb) => {
-    if (path.extname(file.originalname) !== '.json') {
-      const err = new Error('Only .json files are allowed');
-      err.status = 400;
-      return cb(err);
-    }
-    cb(null, true);
-  }
-});
 
 // 获取 typeCode
 const getTypeCode = async (roomTypeId) => {
@@ -58,12 +42,12 @@ router.get('/files', authenticateToken, async (req, res) => {
 });
 
 // 处理 POST 请求，上传新文件
-router.post('/files', authenticateToken, upload.single('file'), async (req, res) => {
+router.post('/files', authenticateToken, async (req, res) => {
   const { projectId, roomTypeId } = req.params;
-  const { file } = req;
+  const config = req.body; // 从请求体中获取整个JSON对象
 
-  if (!file) {
-    return res.status(400).send("No file uploaded");
+  if (!config) {
+    return res.status(400).send("No configuration data provided");
   }
 
   try {
@@ -79,34 +63,34 @@ router.post('/files', authenticateToken, upload.single('file'), async (req, res)
       return res.status(409).send("Configuration for this room type already exists");
     }
 
-    const content = JSON.parse(file.buffer.toString('utf-8'));
     const typeCode = await getTypeCode(roomTypeId);
 
     const newRoomConfig = new RoomConfig({
       projectId,
       roomTypeId,
       typeCode,
-      config: content
+      config // 直接将请求体中的JSON对象作为config字段
     });
 
     await newRoomConfig.save();
     
     res.status(201).json({
-      result: "File uploaded successfully",
-      config: content
+      result: "Configuration uploaded successfully",
+      config: config
     });
   } catch (error) {
-    res.status(500).send("Error uploading file");
+    console.error('Error uploading configuration:', error); // 打印错误日志以便调试
+    res.status(500).send("Error uploading configuration");
   }
 });
 
 // 处理 PUT 请求，替换文件
-router.put('/files', authenticateToken, upload.single('file'), async (req, res) => {
+router.put('/files', authenticateToken, async (req, res) => {
   const { projectId, roomTypeId } = req.params;
-  const { file } = req;
+  const config = req.body; // 从请求体中获取整个JSON对象
 
-  if (!file) {
-    return res.status(400).send("No file uploaded");
+  if (!config) {
+    return res.status(400).send("No configuration data provided");
   }
 
   try {
@@ -117,12 +101,11 @@ router.put('/files', authenticateToken, upload.single('file'), async (req, res) 
       return res.status(404).json({ error: "Project or Room Type not found" });
     }
 
-    const content = JSON.parse(file.buffer.toString('utf-8'));
     const typeCode = await getTypeCode(roomTypeId);
 
     const roomConfig = await RoomConfig.findOneAndUpdate(
       { projectId, roomTypeId },
-      { config: content, typeCode },
+      { config, typeCode },
       { new: true }
     );
 
@@ -131,11 +114,12 @@ router.put('/files', authenticateToken, upload.single('file'), async (req, res) 
     }
 
     res.status(200).json({
-      result: "File replaced successfully",
-      config: content
+      result: "Configuration replaced successfully",
+      config: config
     });
   } catch (error) {
-    res.status(500).send("Error replacing file");
+    console.error('Error replacing configuration:', error); // 打印错误日志以便调试
+    res.status(500).send("Error replacing configuration");
   }
 });
 
@@ -169,6 +153,7 @@ router.delete('/files', authenticateToken, async (req, res) => {
 
     res.status(200).send("Configuration deleted successfully");
   } catch (error) {
+    console.error('Error deleting configuration:', error); // 打印错误日志以便调试
     res.status(500).send("Error deleting configuration");
   }
 });
