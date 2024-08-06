@@ -5,30 +5,30 @@ const authenticateToken = require('../middleware/auth');
 const fs = require('fs');
 const path = require('path');
 
-// 获取 typeCode
+// get typeCode
 const getTypeCode = async (roomTypeId) => {
   const roomType = await RoomType.findById(roomTypeId);
   return roomType ? roomType.typeCode : null;
 };
 
-// 处理 GET 请求，获取房型文件列表
+// get request - room configuration
 router.get('/files', authenticateToken, async (req, res) => {
   const { projectId, roomTypeId } = req.params;
 
   try {
-    // 检查项目是否存在
+    // check project is existing
     const projectExists = await Project.exists({ _id: projectId });
     if (!projectExists) {
       return res.status(404).json({ error: "Project not found" });
     }
 
-    // 检查房型是否存在
+    // check room type of project is existing
     const roomTypeExists = await RoomType.exists({ _id: roomTypeId });
     if (!roomTypeExists) {
       return res.status(404).json({ error: "Room Type not found" });
     }
 
-    // 获取房型配置
+    // use project id and room type id to find room configurations
     const roomConfigs = await RoomConfig.find({ projectId, roomTypeId });
     if (!roomConfigs.length) {
       return res.status(404).json({ error: "No configurations found" });
@@ -36,15 +36,15 @@ router.get('/files', authenticateToken, async (req, res) => {
 
     res.status(200).json(roomConfigs);
   } catch (error) {
-    console.error('Error fetching files:', error); // 打印错误日志以便调试
+    console.error('Error fetching files:', error);
     res.status(500).send("Error fetching files");
   }
 });
 
-// 处理 POST 请求，上传新文件
+// post request - upload a new room configuration
 router.post('/files', authenticateToken, async (req, res) => {
   const { projectId, roomTypeId } = req.params;
-  const config = req.body; // 从请求体中获取整个JSON对象
+  const config = req.body; // get entire json object from request body
 
   if (!config) {
     return res.status(400).send("No configuration data provided");
@@ -69,7 +69,7 @@ router.post('/files', authenticateToken, async (req, res) => {
       projectId,
       roomTypeId,
       typeCode,
-      config // 直接将请求体中的JSON对象作为config字段
+      config // use the JSON object in the request body as the config field 
     });
 
     await newRoomConfig.save();
@@ -79,7 +79,7 @@ router.post('/files', authenticateToken, async (req, res) => {
       config: config
     });
   } catch (error) {
-    console.error('Error uploading configuration:', error); // 打印错误日志以便调试
+    console.error('Error uploading configuration:', error);
     res.status(500).send("Error uploading configuration");
   }
 });
@@ -87,7 +87,7 @@ router.post('/files', authenticateToken, async (req, res) => {
 // 处理 PUT 请求，替换文件
 router.put('/files', authenticateToken, async (req, res) => {
   const { projectId, roomTypeId } = req.params;
-  const config = req.body; // 从请求体中获取整个JSON对象
+  const config = req.body;
 
   if (!config) {
     return res.status(400).send("No configuration data provided");
@@ -118,12 +118,12 @@ router.put('/files', authenticateToken, async (req, res) => {
       config: config
     });
   } catch (error) {
-    console.error('Error replacing configuration:', error); // 打印错误日志以便调试
+    console.error('Error replacing configuration:', error);
     res.status(500).send("Error replacing configuration");
   }
 });
 
-// 处理 DELETE 请求，删除文件
+// delete request - delete a room configuration
 router.delete('/files', authenticateToken, async (req, res) => {
   const { projectId, roomTypeId } = req.params;
 
@@ -144,16 +144,9 @@ router.delete('/files', authenticateToken, async (req, res) => {
     if (!roomConfig) {
       return res.status(404).send("Configuration not found");
     }
-
-    // 删除文件系统中的文件
-    const folderPath = path.join(__dirname, '..', 'json_lists', projectId, roomConfig.typeCode);
-    if (fs.existsSync(folderPath)) {
-      fs.rmdirSync(folderPath, { recursive: true });
-    }
-
     res.status(200).send("Configuration deleted successfully");
   } catch (error) {
-    console.error('Error deleting configuration:', error); // 打印错误日志以便调试
+    console.error('Error deleting configuration:', error);
     res.status(500).send("Error deleting configuration");
   }
 });
