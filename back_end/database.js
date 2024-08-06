@@ -1,10 +1,10 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcrypt');
-const mongoURI_development = 'mongodb://localhost:27017';
-const production_development = 'mongodb://admin:kasta_31July@174.138.109.122:27017/kasta?authSource=admin';
+const development_environment = 'mongodb://localhost:27017';
+const production_environment = 'mongodb://admin:kasta_31July@174.138.109.122:27017/kasta?authSource=admin';
 
 // 连接到数据库
-const mainDB = mongoose.createConnection(production_development);
+const mainDB = mongoose.createConnection(development_environment);
 
 mainDB.on('error', (error) => {
   console.error('Database connection error:', error);
