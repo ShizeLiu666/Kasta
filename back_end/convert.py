@@ -1,6 +1,6 @@
+import sys
 import pandas as pd
 import json
-import sys
 import io
 
 def extract_text_from_sheet(sheet_df):
@@ -17,7 +17,7 @@ def process_excel_to_json(file_content):
     all_text_data = {}
     for sheet_name in xl.sheet_names:
         if "Programming Details" in sheet_name: 
-            df = xl.parse(sheet_name)
+            df = xl.parse(sheet_name, engine='openpyxl')  # 确保使用openpyxl引擎
             all_text_data["programming details"] = extract_text_from_sheet(df)
     if not all_text_data:
         return None
@@ -210,10 +210,11 @@ def split_json_file(input_data):
 
 def main():
     try:
-        file_content = sys.stdin.read()
+        file_content = sys.stdin.buffer.read()
         all_text_data = process_excel_to_json(file_content)
         if all_text_data:
-            print(json.dumps(all_text_data))
+            result = split_json_file(all_text_data)
+            print(json.dumps(result))
         else:
             print(json.dumps({"error": "No matching worksheets found"}))
     except Exception as e:
