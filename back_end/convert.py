@@ -13,7 +13,7 @@ def extract_text_from_sheet(sheet_df):
     return text_list
 
 def process_excel_to_json(file_content):
-    xl = pd.ExcelFile(io.BytesIO(file_content), engine='openpyxl')
+    xl = pd.ExcelFile(io.BytesIO(file_content), engine='openpyxl')  # 使用openpyxl引擎
     all_text_data = {}
     for sheet_name in xl.sheet_names:
         if "Programming Details" in sheet_name: 
