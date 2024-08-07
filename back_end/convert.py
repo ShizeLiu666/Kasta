@@ -13,7 +13,7 @@ def extract_text_from_sheet(sheet_df):
     return text_list
 
 def process_excel_to_json(file_content):
-    xl = pd.ExcelFile(io.BytesIO(file_content))
+    xl = pd.ExcelFile(io.BytesIO(file_content), engine='openpyxl')
     all_text_data = {}
     for sheet_name in xl.sheet_names:
         if "Programming Details" in sheet_name: 
@@ -209,11 +209,16 @@ def split_json_file(input_data):
     return result
 
 def main():
-    file_content = sys.stdin.buffer.read()
-    all_text_data = process_excel_to_json(file_content)
-    if all_text_data:
-        result = split_json_file(all_text_data)
-        print(json.dumps(result, indent=4))
+    try:
+        file_content = sys.stdin.read()
+        all_text_data = process_excel_to_json(file_content)
+        if all_text_data:
+            print(json.dumps(all_text_data))
+        else:
+            print(json.dumps({"error": "No matching worksheets found"}))
+    except Exception as e:
+        print(f"Error: {e}", file=sys.stderr)
+        sys.exit(1)
 
 if __name__ == "__main__":
     main()
