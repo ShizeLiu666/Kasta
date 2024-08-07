@@ -1,7 +1,12 @@
 import sys
+import openpyxl
 import pandas as pd
 import json
 import io
+
+# print("Python version:", sys.version)
+# print("Pandas version:", pd.__version__)
+# print("Openpyxl version:", openpyxl.__version__)
 
 def extract_text_from_sheet(sheet_df):
     text_list = []
@@ -13,15 +18,21 @@ def extract_text_from_sheet(sheet_df):
     return text_list
 
 def process_excel_to_json(file_content):
-    xl = pd.ExcelFile(io.BytesIO(file_content), engine='openpyxl')  # 使用openpyxl引擎
-    all_text_data = {}
-    for sheet_name in xl.sheet_names:
-        if "Programming Details" in sheet_name: 
-            df = xl.parse(sheet_name, engine='openpyxl')  # 确保使用openpyxl引擎
-            all_text_data["programming details"] = extract_text_from_sheet(df)
-    if not all_text_data:
+    try:
+        import openpyxl  # Ensure openpyxl is imported
+        print("openpyxl version:", openpyxl.__version__)
+        xl = pd.ExcelFile(io.BytesIO(file_content), engine='openpyxl')  # 使用openpyxl引擎
+        all_text_data = {}
+        for sheet_name in xl.sheet_names:
+            if "Programming Details" in sheet_name: 
+                df = xl.parse(sheet_name, engine='openpyxl')  # 确保使用openpyxl引擎
+                all_text_data["programming details"] = extract_text_from_sheet(df)
+        if not all_text_data:
+            return None
+        return all_text_data
+    except Exception as e:
+        print("Error:", e)
         return None
-    return all_text_data
 
 def process_devices(split_data):
     devices_content = split_data.get("devices", [])
