@@ -4,10 +4,7 @@ import pandas as pd
 import json
 import io
 
-# print("Python version:", sys.version)
-# print("Pandas version:", pd.__version__)
-# print("Openpyxl version:", openpyxl.__version__)
-
+# 保持调试信息仅在错误时打印
 def extract_text_from_sheet(sheet_df):
     text_list = []
     for value in sheet_df.values.flatten():
@@ -19,8 +16,6 @@ def extract_text_from_sheet(sheet_df):
 
 def process_excel_to_json(file_content):
     try:
-        import openpyxl  # Ensure openpyxl is imported
-        print("openpyxl version:", openpyxl.__version__)
         xl = pd.ExcelFile(io.BytesIO(file_content), engine='openpyxl')  # 使用openpyxl引擎
         all_text_data = {}
         for sheet_name in xl.sheet_names:
@@ -31,7 +26,7 @@ def process_excel_to_json(file_content):
             return None
         return all_text_data
     except Exception as e:
-        print("Error:", e)
+        print(f"Error: {e}", file=sys.stderr)
         return None
 
 def process_devices(split_data):
@@ -225,11 +220,13 @@ def main():
         all_text_data = process_excel_to_json(file_content)
         if all_text_data:
             result = split_json_file(all_text_data)
-            print(json.dumps(result))
+            json_output = json.dumps(result)
+            print(json_output)
         else:
             print(json.dumps({"error": "No matching worksheets found"}))
     except Exception as e:
-        print(f"Error: {e}", file=sys.stderr)
+        error_message = f"Error: {e}"
+        print(json.dumps({"error": error_message}), file=sys.stderr)
         sys.exit(1)
 
 if __name__ == "__main__":
