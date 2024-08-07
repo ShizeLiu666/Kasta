@@ -43,8 +43,8 @@ router.post('/convert', (req, res, next) => {
     const scriptPath = path.join(__dirname, '..', 'convert.py'); // 更新路径指向正确的位置
     console.log('Script path:', scriptPath); // 打印脚本路径
 
-    const pythonExecutable = 'python';
-    // const pythonExecutable = '/usr/bin/python3'; // 或者 'python3' 取决于你的系统
+    // const pythonExecutable = 'python';
+    const pythonExecutable = '/usr/bin/python3'; // 或者 'python3' 取决于你的系统
     console.log('Python executable:', pythonExecutable); // 打印 Python 可执行文件路径
 
     const pythonProcess = spawn(pythonExecutable, [scriptPath], { shell: true });
