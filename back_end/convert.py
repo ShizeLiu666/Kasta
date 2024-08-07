@@ -4,6 +4,9 @@ import pandas as pd
 import json
 import io
 
+print("Using openpyxl version:", openpyxl.__version__, file=sys.stderr)
+print("Using pandas version:", pd.__version__, file=sys.stderr)
+
 # 保持调试信息仅在错误时打印
 def extract_text_from_sheet(sheet_df):
     text_list = []
