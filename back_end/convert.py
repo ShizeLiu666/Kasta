@@ -3,17 +3,18 @@ import openpyxl
 import pandas as pd
 import json
 import io
+import re
 
 print("Using openpyxl version:", openpyxl.__version__, file=sys.stderr)
 print("Using pandas version:", pd.__version__, file=sys.stderr)
 
-# 保持调试信息仅在错误时打印
 def extract_text_from_sheet(sheet_df):
     text_list = []
     for value in sheet_df.values.flatten():
         if pd.notna(value) and isinstance(value, str):
             value = value.replace('\uff08', '(').replace('\uff09', ')').replace('\uff1a', ':')
             value = value.replace("AK", "").replace("ES", "")
+            value = re.sub(r'\(.*?\)', '', value)  # 使用正则表达式去除括号中的内容
             text_list.extend([text.strip() for text in value.split('\n') if text.strip()])
     return text_list
 
@@ -21,12 +22,17 @@ def process_excel_to_json(file_content):
     try:
         xl = pd.ExcelFile(io.BytesIO(file_content), engine='openpyxl')  # 使用openpyxl引擎
         all_text_data = {}
+        print(f"Available sheets: {xl.sheet_names}", file=sys.stderr)  # 打印所有工作表名称
+        
         for sheet_name in xl.sheet_names:
             if "Programming Details" in sheet_name: 
                 df = xl.parse(sheet_name, engine='openpyxl')  # 确保使用openpyxl引擎
                 all_text_data["programming details"] = extract_text_from_sheet(df)
+        
         if not all_text_data:
+            print("No matching worksheet found.", file=sys.stderr)
             return None
+        
         return all_text_data
     except Exception as e:
         print(f"Error: {e}", file=sys.stderr)
@@ -35,159 +41,162 @@ def process_excel_to_json(file_content):
 def process_devices(split_data):
     devices_content = split_data.get("devices", [])
     devices_data = []
-    current_device = None
+    current_shortname = None
+
     for line in devices_content:
-        if "(" in line and ")" in line:
+        line = line.strip()
+
+        if line.startswith("NAME"):
+            current_shortname = line.replace("NAME:", "").strip()
             continue
-        if line.startswith("QTY:"):
-            continue 
-        if line == "NAME:":
+        
+        if line.startswith("QTY"):
             continue
-        if line in ["KBSKTDIM", "KBSKTREL", "S2400IB2", "C300IBH", "H1RSMB", "H2RSMB", "H3RSMB", "H4RSMB", "H6RSMB", "6INPUT", "4OUTPUT"]:
-            current_device = line
-        elif current_device:
+
+        if current_shortname:
             devices_data.append({
-                "appearanceShortname": current_device,
+                "appearanceShortname": current_shortname,
                 "deviceName": line
             })
+
     return {"devices": devices_data}
 
 def process_groups(split_data):
     groups_content = split_data.get("groups", [])
     groups_data = []
+    current_group = None
+
     for line in groups_content:
-        if line.startswith("TOTAL"):
+        line = line.strip()
+
+        if line.startswith("NAME"):
+            current_group = line.replace("NAME:", "").strip()
             continue
-        if "SCENE" in line:
-            continue
+        
         if line.startswith("DEVICE CONTROL"):
             continue
-        if line.startswith("BLIND GROUP"):
-            continue
-        if line and not line.startswith("BUTTON") and not any(keyword in line for keyword in ["ON", "OFF", "+"]):
+
+        if current_group:
             groups_data.append({
-                "groupName": line,
-                "devices": []
+                "groupName": current_group,
+                "devices": line
             })
+
     return {"groups": groups_data}
+
+def parse_scene_content(scene_name, content_lines):
+    contents = []
+    for line in content_lines:
+        parts = line.split()
+        if len(parts) < 2:
+            continue
+
+        status = parts[-1] if parts[-1] in ["ON", "OFF"] else parts[-2]
+        level = 100 if status == "ON" else 0
+        
+        if '+' in parts[-1]:
+            try:
+                level = int(parts[-1].replace("%", "").replace("+", ""))
+            except (ValueError, IndexError):
+                pass
+        
+        device_names = " ".join(parts[:-1] if parts[-1] in ["ON", "OFF"] else parts[:-2]).split(",")
+
+        for name in device_names:
+            contents.append({
+                "name": name.strip(),
+                "status": status,
+                "statusConditions": {
+                    "level": level
+                }
+            })
+    return contents
+
+def process_scenes(split_data):
+    scenes_content = split_data.get("scenes", [])
+    scenes_data = {}
+    current_scene = None
+
+    for i, line in enumerate(scenes_content):
+        line = line.strip()
+        
+        if line.startswith("CONTROL CONTENT"):
+            continue
+        
+        if line.startswith("NAME"):
+            current_scene = line.replace("NAME:", "").strip()
+            if current_scene not in scenes_data:
+                scenes_data[current_scene] = []
+        elif current_scene:
+            scenes_data[current_scene].extend(parse_scene_content(current_scene, [line]))
+
+    scenes_output = [{"sceneName": scene_name, "contents": contents} for scene_name, contents in scenes_data.items()]
+
+    return {"scenes": scenes_output}
 
 def process_remote_controls(split_data):
     remote_controls_content = split_data.get("remoteControls", [])
     remote_controls_data = []
     current_remote = None
     current_links = []
-    remote_control_keywords = ["6IN", "4OUT", "S01", "S02", "S03", "S04", "S05", "S06", "S07", "S08", "S09", "S10", "S11", "S12", "S13"]
+
     for line in remote_controls_content:
+        line = line.strip()
+
         if line.startswith("TOTAL"):
             continue
-        if line.strip() in remote_control_keywords:
+
+        if line.startswith("NAME"):
             if current_remote:
                 remote_controls_data.append({
                     "remoteName": current_remote,
                     "links": current_links
                 })
-            current_remote = line.strip()
+            current_remote = line.replace("NAME:", "").strip()
             current_links = []
-        elif line.startswith("BUTTON"):
+        
+        elif line.startswith("LINK"):
+            continue
+
+        else:
             parts = line.split(":")
-            button_index = int(parts[0].replace("BUTTON", "").strip()) - 1
-            button_name = parts[1].strip()
-            if "SCENE" in button_name:
+            if len(parts) < 2:
+                continue
+
+            link_index = int(parts[0].strip()) - 1
+            link_description = parts[1].strip()
+
+            action = "NORMAL"
+            if " - " in link_description:
+                link_description, action = link_description.rsplit(" - ", 1)
+                action = action.strip().upper()
+
+            if link_description.startswith("SCENE"):
                 link_type = 2
-            elif "DND" in button_name:
-                link_type = 3
-            elif "GROUP" in button_name:
+                link_name = link_description.replace("SCENE", "").strip()
+            elif link_description.startswith("GROUP"):
                 link_type = 1
-            else:
+                link_name = link_description.replace("GROUP ", "", 1).strip()
+            elif link_description.startswith("DEVICE"):
                 link_type = 0
-            for prefix in ["SCENE ", "DEVICE ", "GROUP "]:
-                if button_name.startswith(prefix):
-                    button_name = button_name[len(prefix):].strip()
+                link_name = link_description.replace("DEVICE", "").strip()
+            else:
+                continue
+
             current_links.append({
-                "linkIndex": button_index,
+                "linkIndex": link_index,
                 "linkType": link_type,
-                "linkName": button_name
+                "linkName": link_name,
+                "action": action
             })
+
     if current_remote:
         remote_controls_data.append({
             "remoteName": current_remote,
             "links": current_links
         })
+
     return {"remoteControls": remote_controls_data}
-
-def parse_scene_content(content_lines):
-    contents = []
-    for line in content_lines:
-        parts = line.split()
-        if len(parts) < 2:
-            continue
-        name = parts[0]
-        status = parts[1]
-        level = 100 if status == "ON" else 0
-        if len(parts) > 2 and '+' in parts:
-            try:
-                level_index = parts.index('+') + 1
-                level = int(parts[level_index].replace("%", ""))
-            except (ValueError, IndexError):
-                pass
-        contents.append({
-            "name": name,
-            "status": status,
-            "statusConditions": {
-                "level": level
-            }
-        })
-    return contents
-
-def process_scenes(split_data):
-    scenes_content = split_data.get("scenes", [])
-    scenes_data = []
-    current_scene = None
-    current_controls = []
-    remote_control_keywords = [
-        "BRIGHT",
-        "OFF",
-        "SOFT",
-        "BATH ON",
-        "BATH OFF",
-        "BATH MOOD",
-        "WELCOME",
-        "OCCUPIED",
-        "SMALL BATH ON",
-        "SMALL BATH OFF",
-        "SMALL BATH MOOD",
-        "BED BRIGHT",
-        "BED OFF",
-        "BED SOFT",
-        "DINING BRIGHT",
-        "DINING OFF",
-        "DINING SOFT",
-        "LIVING BRIGHT",
-        "LIVING OFF",
-        "LIVING SOFT"
-    ]
-
-    for line in scenes_content:
-        if line.startswith("TOTAL"):
-            continue
-        if line in remote_control_keywords:
-            if current_scene:
-                scenes_data.append({
-                    "sceneName": current_scene,
-                    "contents": parse_scene_content(current_controls)
-                })
-            current_scene = line
-            current_controls = []
-        else:
-            current_controls.append(line)
-    
-    if current_scene:
-        scenes_data.append({
-            "sceneName": current_scene,
-            "contents": parse_scene_content(current_controls)
-        })
-
-    return {"scenes": scenes_data}
 
 def split_json_file(input_data):
     content = input_data.get("programming details", [])
