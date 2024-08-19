@@ -67,32 +67,37 @@ router.post('/', authenticateToken, async (req, res) => {
   }
 });
 
-// TODO 处理删除房型的 POST 请求
+// 封装的函数，用于验证 roomType 和 project 之间的关系
+const validateRoomTypeAndProject = async (projectId, roomTypeId) => {
+  const roomType = await RoomType.findById(roomTypeId);
+  if (!roomType) {
+    throw new Error("Room Type not found");
+  }
+
+  if (roomType.projectId.toString() !== projectId) {
+    throw new Error("Room Type does not belong to the specified Project");
+  }
+
+  return roomType;
+};
+
 // 处理删除房型的 POST 请求
 router.post('/delete', authenticateToken, async (req, res) => {
   try {
     const projectId = req.params.projectId;
-    console.log(`Deleting room type for project: ${projectId}`);
-    const project = await Project.findById(projectId);
-    if (!project) {
-      console.log('Project not found');
-      return res.status(404).json({ error: 'Project not found' });
-    }
-
     const { roomTypeId } = req.body;
+
     if (!roomTypeId) {
       console.log('Invalid request format');
       return res.status(400).json({ error: 'Invalid request format' });
     }
 
-    const roomType = await RoomType.findById(roomTypeId);
-    if (!roomType) {
-      console.log('Room type not found');
-      return res.status(404).json({ error: 'Room type not found' });
-    }
+    // 验证 roomTypeId 和 projectId
+    const roomType = await validateRoomTypeAndProject(projectId, roomTypeId);
+    console.log(`Deleting room type for project: ${projectId}`);
 
     // 删除与该房型相关的所有配置文件
-    await RoomConfig.deleteMany({ roomTypeId: roomTypeId });
+    await RoomConfig.deleteMany({ roomTypeId });
     console.log(`Deleted room configurations for room type: ${roomTypeId}`);
 
     // 删除房型
@@ -109,7 +114,8 @@ router.post('/delete', authenticateToken, async (req, res) => {
     res.status(200).json({ message: 'Room type and related configurations and folder deleted successfully' });
   } catch (error) {
     console.error("Error in POST /api/projects/:projectId/roomTypes/delete:", error);
-    res.status(500).send("Error deleting the room type.");
+    const statusCode = error.message.includes('not found') || error.message.includes('does not belong') ? 404 : 500;
+    res.status(statusCode).send(`Error deleting the room type: ${error.message}`);
   }
 });
 
@@ -141,6 +147,12 @@ router.put('/:roomTypeId', authenticateToken, async (req, res) => {
     if (!updatedRoomType) {
       return res.status(404).send("Room type not found.");
     }
+
+    // 更新 RoomConfig 表中的所有关联配置的 typeCode
+    await RoomConfig.updateMany(
+      { roomTypeId: roomTypeId },
+      { $set: { typeCode: typeCode } }
+    );
 
     res.status(200).json(updatedRoomType);
   } catch (error) {
